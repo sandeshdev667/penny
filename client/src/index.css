@@ -1,0 +1,8 @@
+:root {
+  --cream: #f5ecd7;
+  --terracotta: #c4562a;
+  --black: #1c1917;
+}
+body { margin: 0; background: var(--cream); color: var(--black); font-family: system-ui, sans-serif; }
+.page { max-width: 1000px; margin: 0 auto; padding: 24px 16px; }
+.card { background: #fffaf0; border: 1px solid #e5d9c3; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
