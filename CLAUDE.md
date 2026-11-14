@@ -20,14 +20,21 @@ STACK:
 - I'm on a Mac, using VS Code.
 
 DONE SO FAR:
-- penny/ folder with server/ and client/ (empty), git init done (not on GitHub yet)
+- penny/ folder with server/ and client/ (client/ still empty)
+- On GitHub (private repo "penny"). I make commits/pushes myself from my own
+  terminal; just give me the commands.
 - .gitignore in penny/ (ignores .env, node_modules, dist, .DS_Store)
-- server/.env with DATABASE_URL, GEMINI_API_KEY, GEMINI_MODEL, APP_TIMEZONE, PORT
+- server/.env with DATABASE_URL, GEMINI_API_KEY, GEMINI_MODEL, APP_TIMEZONE, PORT (4000)
+- Server setup done: package.json ("type": "module", Express 5, TypeScript 7),
+  tsconfig.json (module nodenext → local imports need ".js" endings).
+  Scripts: npm run dev (tsx watch), build, start, typecheck.
+- server/src/index.ts: minimal Express app with GET /api/health → {"ok":true} (tested)
 
-NEXT STEP: project setup part 3 — npm init + install packages in server/,
-then TypeScript config and scripts.
+NEXT STEP: connect the server to Tiger Cloud (pg Pool), then design the
+database tables. Take it slowly, one decision at a time.
 
 RULES FOR WORKING WITH ME:
-- Go step by step, one thing at a time.
+- Go step by step, one thing at a time. Keep messages short; long, dense
+  explanations overwhelm me.
 - Explain what you're about to do and ASK BEFORE writing any code or running commands.
 - Never read, print, or edit server/.env — it contains my secrets.
