@@ -1,8 +1,128 @@
+/* ---------- Theme: Greek pottery (terracotta, black, cream) ---------- */
 :root {
   --cream: #f5ecd7;
+  --cream-light: #fffaf0;
   --terracotta: #c4562a;
   --black: #1c1917;
+  --muted: #78716c;
+  --border: #e5d9c3;
+  --heading: "Cinzel", Georgia, serif;
+  --body: "Inter", system-ui, sans-serif;
 }
-body { margin: 0; background: var(--cream); color: var(--black); font-family: system-ui, sans-serif; }
-.page { max-width: 1000px; margin: 0 auto; padding: 24px 16px; }
-.card { background: #fffaf0; border: 1px solid #e5d9c3; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--cream);
+  color: var(--black);
+  font-family: var(--body);
+}
+
+h1, h2 { font-family: var(--heading); font-weight: 600; margin: 0; }
+h1 { font-size: 28px; }
+h2 { font-size: 16px; letter-spacing: 0.04em; margin-bottom: 12px; }
+.muted { color: var(--muted); margin: 4px 0 0; }
+
+/* ---------- Page layout: sidebar + main ---------- */
+.app { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--black);
+  color: var(--cream);
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--heading);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--cream);
+}
+/* The logo file has a baked-in background, so we clip it to a circle */
+.brand-logo { width: 36px; height: 36px; border-radius: 50%; }
+
+.nav { display: flex; flex-direction: column; gap: 4px; }
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  border-left: 3px solid transparent;
+  color: var(--cream);
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font: inherit;
+  cursor: pointer;
+  opacity: 0.7;
+}
+.nav-icon { width: 24px; height: 24px; }
+.nav-link:hover { background: rgba(245, 236, 215, 0.08); opacity: 1; }
+.nav-link.active {
+  background: rgba(196, 86, 42, 0.2);
+  border-left-color: var(--terracotta);
+  opacity: 1;
+}
+
+.main { flex: 1; min-width: 0; max-width: 1200px; padding: 32px; }
+.content { display: flex; flex-direction: column; gap: 16px; }
+
+/* ---------- Cards ---------- */
+.card {
+  min-width: 0;
+  background: var(--cream-light);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.stat-label {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.stat-value {
+  display: block;
+  margin-top: 6px;
+  font-size: 28px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* ---------- Phones and small screens ---------- */
+@media (max-width: 800px) {
+  .app { flex-direction: column; }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 12px 16px;
+  }
+  .nav { flex-direction: row; flex-wrap: wrap; }
+  .nav-link { padding: 8px 10px; font-size: 14px; }
+  .main { padding: 16px; }
+  .stats, .grid-2 { grid-template-columns: 1fr; }
+}
