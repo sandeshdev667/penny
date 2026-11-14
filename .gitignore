@@ -1,0 +1,13 @@
+# Secrets — never upload these
+.env
+*.env
+*credentials*
+
+# Installed packages
+node_modules/
+
+# Build output
+dist/
+
+# Mac junk
+.DS_Store
