@@ -107,6 +107,24 @@ h2 { font-size: 16px; letter-spacing: 0.04em; margin-bottom: 12px; }
 
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 
+/* ---------- Top merchants list ---------- */
+.merchant-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 18px; }
+.merchant { display: flex; gap: 14px; align-items: flex-start; }
+.merchant-rank {
+  font-family: var(--heading);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--terracotta);
+  width: 16px;
+}
+.merchant-info { flex: 1; min-width: 0; }
+.merchant-row { display: flex; justify-content: space-between; gap: 8px; }
+.merchant-name { font-weight: 500; }
+.merchant-total { font-weight: 600; font-variant-numeric: tabular-nums; }
+.merchant-bar { height: 6px; background: var(--border); border-radius: 3px; margin: 6px 0 4px; }
+.merchant-bar > div { height: 100%; background: var(--terracotta); border-radius: 3px; }
+.merchant-visits { font-size: 13px; color: var(--muted); }
+
 /* ---------- Phones and small screens ---------- */
 @media (max-width: 800px) {
   .app { flex-direction: column; }

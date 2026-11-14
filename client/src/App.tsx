@@ -15,7 +15,8 @@ import owlIcon from "./assets/owl.png";
 
 type MonthlyTotal = { month: string; total: number };
 type CategoryTotal = { category: string; total: number };
-type Summary = { this_month: number; last_month: number; top_category: string | null };
+type Merchant = { merchant: string; visits: number; total: number };
+type Summary ={ this_month: number; last_month: number; top_category: string | null };
 
 // Formats a number as dollars, e.g. 1240.5 -> "$1,241"
 const usd = (n: number) =>
@@ -34,6 +35,7 @@ export default function App() {
   const [monthly, setMonthly] = useState<MonthlyTotal[]>([]);
   const [categories, setCategories] = useState<CategoryTotal[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null); // null = not loaded yet
+  const [merchants, setMerchants] = useState<Merchant[]>([]);
 
   // runs once when the page loads: ask the server for the data
   useEffect(() => {
@@ -48,7 +50,14 @@ export default function App() {
     fetch("http://localhost:4000/api/summary")
       .then((res) => res.json())
       .then(setSummary);
+
+    fetch("http://localhost:4000/api/merchants/top")
+      .then((res) => res.json())
+      .then(setMerchants);
   }, []);
+
+  // the biggest total, used to size each merchant's bar (biggest = full width)
+  const topTotal = merchants[0]?.total ?? 1;
 
   return (
     <div className="app">
@@ -126,7 +135,23 @@ export default function App() {
 
             <section className="card">
               <h2>Top merchants</h2>
-              <p className="muted">Coming soon</p>
+              <ol className="merchant-list">
+                {merchants.map((m, i) => (
+                  <li key={m.merchant} className="merchant">
+                    <span className="merchant-rank">{i + 1}</span>
+                    <div className="merchant-info">
+                      <div className="merchant-row">
+                        <span className="merchant-name">{m.merchant}</span>
+                        <span className="merchant-total">{usd(m.total)}</span>
+                      </div>
+                      <div className="merchant-bar">
+                        <div style={{ width: `${(m.total / topTotal) * 100}%` }} />
+                      </div>
+                      <span className="merchant-visits">{m.visits} visits</span>
+                    </div>
+                  </li>
+                ))}
+              </ol>
             </section>
           </div>
         </div>
