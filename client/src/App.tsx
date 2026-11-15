@@ -5,19 +5,17 @@ import Dashboard from "./Dashboard";
 import ScanPage from "./ScanPage";
 import AthenaPage from "./AthenaPage";
 import { useAthenaChat } from "./useAthenaChat";
-import Meander from "./Meander";
+import AxesLine from "./AxesLine";
 import { EASE } from "./anim";
-import logoMark from "./assets/logo-mark.png";
-import templeIcon from "./assets/building.png";
-import shipIcon from "./assets/voyage.png";
-import owlIcon from "./assets/owl.png";
+import { CameoIcon, ShipIcon, TempleIcon } from "./icons";
+import pennyMark from "./assets/penny-mark.svg";
 
 // The pages in the sidebar (eyebrow = the small line above each page title)
 type Page = "dashboard" | "scan" | "athena";
-const PAGES: { id: Page; label: string; icon: string; eyebrow: string; title: string }[] = [
-  { id: "dashboard", label: "Dashboard", icon: templeIcon, eyebrow: "The ledger", title: "Where the money sailed" },
-  { id: "scan", label: "Scan Receipt", icon: shipIcon, eyebrow: "Bring it home", title: "Scan a receipt" },
-  { id: "athena", label: "Ask Athena", icon: owlIcon, eyebrow: "Counsel", title: "Ask Athena" },
+const PAGES: { id: Page; label: string; Icon: typeof TempleIcon; eyebrow: string; title: string }[] = [
+  { id: "dashboard", label: "Dashboard", Icon: TempleIcon, eyebrow: "The ledger", title: "Where the money sailed" },
+  { id: "scan", label: "Scan Receipt", Icon: ShipIcon, eyebrow: "Bring it home", title: "Scan a receipt" },
+  { id: "athena", label: "Ask Athena", Icon: CameoIcon, eyebrow: "Counsel", title: "Ask Athena" },
 ];
 
 // Remember (for this browser tab) that the user already went past the landing page,
@@ -38,12 +36,33 @@ function saveEntered(yes: boolean) {
   }
 }
 
+// Remember (on this device) whether the sidebar is collapsed
+const SIDEBAR_KEY = "penny.sidebarCollapsed";
+function loadCollapsed() {
+  try {
+    return localStorage.getItem(SIDEBAR_KEY) === "yes";
+  } catch {
+    return false;
+  }
+}
+
 export default function App() {
   const [entered, setEntered] = useState(loadEntered); // false = show the landing page
   const [page, setPage] = useState<Page>("dashboard"); // which page is showing right now
   const current = PAGES.find((p) => p.id === page)!;
   // the Ask Athena conversation lives here, so it survives switching pages
   const athenaChat = useAthenaChat();
+  const [collapsed, setCollapsed] = useState(loadCollapsed); // sidebar shows icons only
+
+  function toggleSidebar() {
+    const next = !collapsed;
+    setCollapsed(next);
+    try {
+      localStorage.setItem(SIDEBAR_KEY, next ? "yes" : "no");
+    } catch {
+      // storage blocked: it still works, it just won't be remembered
+    }
+  }
 
   // "Start scanning" on the landing page
   function enter() {
@@ -70,16 +89,30 @@ export default function App() {
           <motion.div
             key="app"
             className="app"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.6, ease: EASE }}
+            // slides in from the right, following the ship's direction of travel
+            initial={{ x: "100%" }}
+            animate={{ x: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } }}
+            exit={{ opacity: 0, transition: { duration: 0.4, ease: EASE } }}
           >
             {/* ---------- Sidebar ---------- */}
-            <aside className="sidebar">
+            <aside className={`sidebar ${collapsed ? "collapsed" : ""}`}>
               <button className="brand" onClick={leave} title="Back to the landing page">
-                <img src={logoMark} alt="" className="brand-logo" />
-                <span>Penny</span>
+                <img src={pennyMark} alt="" className="brand-logo" />
+                <span className="brand-text">
+                  <span className="brand-name">Penny</span>
+                  <span className="brand-sub">Ledger of the voyage</span>
+                </span>
+              </button>
+              {/* the round button on the sidebar's edge: collapse to icons / expand again */}
+              <button
+                className="sidebar-toggle"
+                onClick={toggleSidebar}
+                aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+              >
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden>
+                  <path d="M7.5 2.5 4 6l3.5 3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </button>
               <nav className="nav">
                 {PAGES.map((p) => (
@@ -87,6 +120,7 @@ export default function App() {
                     key={p.id}
                     className={`nav-link ${page === p.id ? "active" : ""}`}
                     onClick={() => setPage(p.id)}
+                    title={collapsed ? p.label : undefined}
                   >
                     {/* the highlight slides between buttons (layoutId makes it one moving element) */}
                     {page === p.id && (
@@ -96,7 +130,7 @@ export default function App() {
                         transition={{ type: "spring", stiffness: 420, damping: 36 }}
                       />
                     )}
-                    <img src={p.icon} alt="" className="nav-icon" />
+                    <p.Icon className="nav-icon" />
                     <span className="nav-label">{p.label}</span>
                   </button>
                 ))}
@@ -116,11 +150,14 @@ export default function App() {
                   exit={{ opacity: 0, y: -8 }}
                   transition={{ duration: 0.35, ease: EASE }}
                 >
-                  <header className="page-head">
-                    <span className="eyebrow">{current.eyebrow}</span>
-                    <h1>{current.title}</h1>
-                    <Meander units={11} className="page-meander" delay={0.15} duration={1.1} />
-                  </header>
+                  {/* the chat page has its own slim header, like a normal chat app */}
+                  {page !== "athena" && (
+                    <header className="page-head">
+                      <span className="eyebrow">{current.eyebrow}</span>
+                      <h1>{current.title}</h1>
+                      <AxesLine className="page-axes" delay={0.2} duration={1.1} />
+                    </header>
+                  )}
 
                   {page === "dashboard" && <Dashboard />}
                   {page === "scan" && <ScanPage onViewDashboard={() => setPage("dashboard")} />}

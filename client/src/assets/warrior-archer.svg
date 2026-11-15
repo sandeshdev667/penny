@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <g transform="translate(116 2) scale(-1.75 1.75)" stroke-linecap="round" stroke-linejoin="round">
+    <!-- quiver on the back, arrows sticking out -->
+    <path d="M10.6 33.4 L17.6 30.6 L24.6 50.4 L17.6 53.2 Z" fill="#b5843d" stroke="#0b1422" stroke-width="0.6"/>
+    <path d="M12.4 32.6 L9.2 25.6 M14.6 31.8 L12.6 24.2 M16.6 31 L15.8 23.4" stroke="#ecd29c" stroke-width="1"/>
+    <path d="M8.4 26.8 L9.2 25.6 L10.6 26.4 M11.6 25.4 L12.6 24.2 L13.8 25 M14.8 24.6 L15.8 23.4 L17 24.2" fill="none" stroke="#ecd29c" stroke-width="0.8"/>
+    <!-- shoulders: tunic with the quiver strap -->
+    <path d="M6 66 L6.6 57 C12.4 50.6 21 47.2 30 47.2 C38.4 47.4 45.2 50 50 55.4 L51.6 66 Z" fill="#c4954a"/>
+    <path d="M14 52 L40 66 M27 48.6 C29 52 31.6 54 35 55" fill="none" stroke="#0b1422" stroke-width="0.8"/>
+    <!-- face and neck -->
+    <path d="M37 16.5 C39.6 17.8 40.9 20.6 41 23.6 C41.4 24.6 42.6 26.6 43.9 28.6 C44.6 29.6 45.4 30.4 45.3 31 C45.1 31.7 44.2 31.9 43.4 31.9 L43.3 33.1 C44 33.4 44.1 34 43.4 34.3 L43.2 34.5 C43.8 34.9 43.7 35.8 42.8 36.1 C42.5 37.3 42.9 38.7 41.8 40 C40.4 41.6 37.6 42.3 34.6 42.2 C35 44.4 35.6 46.2 36.6 48 L25.5 49 C27 46.5 27.8 44 27.4 40 L28 22 Z" fill="#ecd09a"/>
+    <!-- beard and moustache -->
+    <path d="M32.6 31.6 C34.2 35.4 36.6 37.4 39.6 37.6 C41 37.7 42 36.9 42.6 36.2 C43.4 38.8 43.2 41.8 41.4 44.4 C39 47.6 34.6 48 31.4 46.2 C29.2 45 28.2 42.4 28.4 39.4 C29 36.4 30.6 33.6 32.6 31.6 Z" fill="#b5843d"/>
+    <path d="M34 40 C35.4 42.4 37 43.8 39.2 44.2 M31.6 38 C32.2 41.4 33.4 43.8 35.4 45.4" fill="none" stroke="#0b1422" stroke-width="0.6"/>
+    <path d="M42 33.3 C40.6 33.9 38.8 34 37.6 33.2" fill="none" stroke="#b5843d" stroke-width="1.5"/>
+    <!-- eye and brow -->
+    <path d="M36.8 23.4 C38.2 22.6 39.7 22.7 40.7 23.3" fill="none" stroke="#0b1422" stroke-width="0.8"/>
+    <path d="M37.3 25.5 C38.1 24.7 39.3 24.7 40.1 25.3 C39.4 26.1 38.2 26.2 37.3 25.5 Z" fill="#0b1422"/>
+    <path d="M43.5 30.9 C42.9 31.3 42.5 31.1 42.4 30.7" fill="none" stroke="#0b1422" stroke-width="0.7"/>
+    <!-- crest -->
+    <path d="M42 14.6 C41 5.6 27.6 3.4 18.6 10.4 C15.6 13 14.6 16.6 15.4 20 C18.4 14.4 24.4 12 30.4 12 C35 12 39.2 13 42 14.6 Z" fill="#b5843d"/>
+    <path d="M21.6 14.6 L19.4 11.6 M27 12.4 L26 8.8 M33 12.2 L33.2 8.4 M38.4 13.2 L39.8 9.8" stroke="#0b1422" stroke-width="0.9"/>
+    <!-- Attic helmet: open face, cheek guard, neck guard -->
+    <path d="M22.6 33.6 C20.4 22.6 26.4 12.6 36.4 12.6 C43.6 12.6 47.6 17.6 47.2 23.4 L43.2 23.4 C41.6 22.2 38.8 21.9 36.6 22.8 L36.2 30.6 C35.8 34.6 34.2 37.4 31.8 39.2 L29.2 37.4 C27.6 39.2 25.2 40.2 22.8 40.4 Z" fill="#d9b56a"/>
+    <path d="M25 22.4 C30 19.6 38 19.2 46.2 21 M24.4 33.8 C26.4 35 28 35.8 29.6 36" fill="none" stroke="#0b1422" stroke-width="0.8"/>
+    <circle cx="33" cy="26.4" r="0.9" fill="#0b1422"/>
+    <!-- the bow, held upright in front -->
+    <path d="M53.6 2.6 C59.4 10 59.6 20 55.6 27.4 C54.8 29 54.8 31 55.6 32.6 C59.6 40 59.4 50 53.6 57.4" fill="none" stroke="#ecd29c" stroke-width="1.8"/>
+    <path d="M53.2 3.2 L53.2 56.8" stroke="#ecd29c" stroke-width="0.6"/>
+    <path d="M52.2 2.2 C53.2 0.6 55 0.8 55.4 2.4 M52.2 57.8 C53.2 59.4 55 59.2 55.4 57.6" fill="none" stroke="#ecd29c" stroke-width="1.2"/>
+  </g>
+</svg>

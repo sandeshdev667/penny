@@ -1,63 +1,171 @@
-// Ask Athena: a chat where you ask questions about your spending.
-// Styling is intentionally simple (classes start with "athena-") so it can be restyled freely.
+// Ask Athena: a chat (like a normal AI chatbot) where you ask questions about your spending.
 
 import { useEffect, useRef, useState } from "react";
-import owlIcon from "./assets/owl.png";
+import { motion } from "motion/react";
+import { EASE } from "./anim";
+import { PlusIcon, SendIcon } from "./icons";
+import athenaMark from "./assets/athena-mark.svg";
 import type { AthenaChat } from "./useAthenaChat";
+
+// Starter questions shown on an empty chat (click one to ask it)
+const SUGGESTIONS = [
+  { title: "Dining last month", question: "How much did I spend on dining last month?" },
+  { title: "My biggest month", question: "Which month did I spend the most, and on what?" },
+  { title: "Subscriptions", question: "How much do my subscriptions cost each month?" },
+  { title: "Where I shop most", question: "Which stores do I spend the most at?" },
+];
+
+const bubble = {
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.3, ease: EASE },
+};
+
+function AthenaAvatar() {
+  return (
+    <img src={athenaMark} alt="" className="chat-avatar" aria-hidden />
+  );
+}
 
 // The conversation itself lives in App (see useAthenaChat), so it isn't lost when you switch pages
 export default function AthenaPage({ chat }: { chat: AthenaChat }) {
   const { messages, thinking, ask, newChat } = chat;
   const [question, setQuestion] = useState("");
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const empty = messages.length === 0;
 
   // Scroll to the newest message whenever the conversation changes
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, thinking]);
+    if (!empty) bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [messages, thinking, empty]);
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault(); // stop the form from reloading the page
-    if (!question.trim() || thinking) return;
-    ask(question);
+  // The message box grows with what you type (up to a limit)
+  useEffect(() => {
+    const box = inputRef.current;
+    if (!box) return;
+    box.style.height = "auto";
+    box.style.height = `${Math.min(box.scrollHeight, 180)}px`;
+  }, [question]);
+
+  function send(text: string) {
+    if (!text.trim() || thinking) return;
+    ask(text);
     setQuestion("");
+    inputRef.current?.focus();
+  }
+
+  // Enter sends, Shift+Enter makes a new line
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+      e.preventDefault();
+      send(question);
+    }
   }
 
   return (
-    <div className="athena">
-      {/* the page title comes from App; this row is just the intro + "New chat" */}
-      <header className="athena-header">
-        <img src={owlIcon} alt="" className="athena-owl" />
-        <p className="muted">Ask anything about your spending, in plain English.</p>
-        {messages.length > 0 && (
-          <button className="button button-secondary athena-new-chat" onClick={newChat} disabled={thinking}>
+    <div className="chat">
+      {/* ---------- Slim top bar ---------- */}
+      <header className="chat-top">
+        <div className="chat-title">
+          <AthenaAvatar />
+          <span>Athena</span>
+          <span className="chat-subtitle">answers from your own spending</span>
+        </div>
+        {!empty && (
+          <button className="chat-new" onClick={newChat} disabled={thinking}>
+            <PlusIcon size={16} />
             New chat
           </button>
         )}
       </header>
 
-      <div className="athena-messages">
-        {messages.map((m, i) => (
-          <div key={i} className={`athena-message ${m.role} ${m.isError ? "error" : ""}`}>
-            <p>{m.text}</p>
+      {empty ? (
+        /* ---------- Empty chat: greeting + suggestions ---------- */
+        <motion.div
+          className="chat-welcome"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: EASE }}
+        >
+          <img src={athenaMark} alt="" className="chat-welcome-mark" />
+          <h1>What would you like to know?</h1>
+          <p className="muted">Ask about your spending in plain English. Athena looks it up in your receipts.</p>
+          <div className="chat-suggestions">
+            {SUGGESTIONS.map((s, i) => (
+              <motion.button
+                key={s.title}
+                onClick={() => send(s.question)}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 + i * 0.06, duration: 0.4, ease: EASE }}
+              >
+                <strong>{s.title}</strong>
+                <span>{s.question}</span>
+              </motion.button>
+            ))}
           </div>
-        ))}
+        </motion.div>
+      ) : (
+        /* ---------- The conversation ---------- */
+        <div className="chat-log">
+          {messages.map((m, i) =>
+            m.role === "user" ? (
+              <motion.div key={i} className="msg msg-user" {...bubble}>
+                <p>{m.text}</p>
+              </motion.div>
+            ) : (
+              <motion.div key={i} className={`msg msg-athena ${m.isError ? "msg-error" : ""}`} {...bubble}>
+                <AthenaAvatar />
+                <div className="msg-body">
+                  <span className="msg-name">Athena</span>
+                  <p>{m.text}</p>
+                </div>
+              </motion.div>
+            ),
+          )}
 
-        {thinking && <div className="athena-message athena thinking">Athena is thinking…</div>}
-        <div ref={bottomRef} />
-      </div>
+          {thinking && (
+            <motion.div className="msg msg-athena" {...bubble}>
+              <AthenaAvatar />
+              <div className="msg-body">
+                <span className="msg-name">Athena</span>
+                <span className="typing" aria-label="Athena is thinking">
+                  <i />
+                  <i />
+                  <i />
+                </span>
+              </div>
+            </motion.div>
+          )}
+          <div ref={bottomRef} />
+        </div>
+      )}
 
-      <form className="athena-form" onSubmit={handleSubmit}>
-        <input
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          placeholder="e.g. How much did I spend on dining last month?"
-          maxLength={500}
-          aria-label="Your question"
-        />
-        <button className="button" type="submit" disabled={thinking || !question.trim()}>
-          Ask
-        </button>
+      {/* ---------- Message box ---------- */}
+      <form
+        className="composer"
+        onSubmit={(e) => {
+          e.preventDefault(); // stop the form from reloading the page
+          send(question);
+        }}
+      >
+        <div className="composer-box">
+          <textarea
+            ref={inputRef}
+            rows={1}
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask Athena about your spending…"
+            maxLength={500}
+            aria-label="Your question"
+          />
+          <button className="composer-send" type="submit" disabled={thinking || !question.trim()} aria-label="Send">
+            <SendIcon size={18} />
+          </button>
+        </div>
+        <p className="composer-note">Athena can make mistakes. Double-check important numbers.</p>
       </form>
     </div>
   );

@@ -126,7 +126,7 @@
   text-shadow: 0 0 50px rgba(240, 220, 170, 0.16);
 }
 .title span { display: inline-block; }
-.hero-meander { width: min(360px, 72vw); height: auto; color: #b8863a; margin: 20px 0 22px; }
+.hero-axes { width: min(320px, 70vw); height: auto; color: #c9a96a; margin: 22px 0 22px; overflow: visible; }
 .tagline {
   margin: 0;
   font-family: var(--display);
@@ -134,7 +134,6 @@
   font-weight: 500;
   font-size: clamp(21px, 2.6vw, 30px);
 }
-.sub { margin: 10px 0 30px; font-size: 14.5px; letter-spacing: 0.03em; color: var(--parchment-dim); }
 
 /* The main button: a gold fill sweeps in on hover */
 .cta {
@@ -177,24 +176,39 @@
 .wave { position: absolute; inset: 0; overflow: hidden; }
 .wave svg { position: absolute; top: 0; left: 0; width: 200%; height: 100%; }
 
-.ship { position: absolute; left: 57%; bottom: 46%; width: 16vh; height: 16vh; min-width: 90px; min-height: 90px; }
-.ship img { width: 100%; height: 100%; filter: drop-shadow(0 0 14px rgba(201, 169, 106, 0.35)); }
+/* the ship rests in the middle of the screen */
+.ship { --ship-w: clamp(180px, 30vh, 340px); position: absolute; left: calc(50% - var(--ship-w) / 2); bottom: 40%; width: var(--ship-w); }
+.ship img { position: relative; display: block; width: 100%; height: auto; filter: drop-shadow(0 0 18px rgba(201, 169, 106, 0.28)); }
+/* foam trailing behind the ship when it sails off to the left */
+.wake { position: absolute; left: 72%; top: 64%; width: 85%; transform-origin: left center; }
+.wake i { display: block; height: 2px; margin: 6px 0; border-radius: 2px; background: linear-gradient(90deg, rgba(241, 230, 205, 0.75), transparent); }
+.wake i:nth-child(2) { width: 75%; margin-left: 12%; }
+.wake i:nth-child(3) { width: 50%; margin-left: 4%; }
+.hero-copy-inner { display: flex; flex-direction: column; align-items: center; }
 
-/* Moonlight glittering on the water */
-.moon-path {
+/* Moonlight on the water: a soft glow under the moon, with a few sparkles */
+.moon-glow {
   position: absolute;
   left: calc(77% + 4.5vw);
-  top: 16%;
-  width: 120px;
-  height: 60%;
+  top: 26%; /* just below the first wave's crest, so it never pokes into the sky */
+  width: 180px;
+  height: 50%;
   transform: translateX(-50%);
-  opacity: 0.4;
-  background: repeating-linear-gradient(to bottom, rgba(244, 234, 210, 0.55) 0 2px, transparent 2px 10px);
-  -webkit-mask-image: radial-gradient(ellipse 50% 100% at 50% 0%, #000 30%, transparent 75%);
-  mask-image: radial-gradient(ellipse 50% 100% at 50% 0%, #000 30%, transparent 75%);
-  animation: shimmer 3s linear infinite;
+  background: radial-gradient(ellipse 45% 40% at 50% 10%, rgba(244, 234, 210, 0.11), transparent 70%);
 }
-@keyframes shimmer { to { background-position: 0 40px; } }
+.glint {
+  position: absolute;
+  margin-left: 90px; /* the middle of the glow */
+  height: 1.5px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, rgba(248, 238, 214, 0.85), transparent);
+  opacity: 0;
+  animation: glint 3.2s ease-in-out infinite;
+}
+@keyframes glint {
+  0%, 100% { opacity: 0; transform: scaleX(0.3); }
+  45%, 55% { opacity: 0.8; transform: scaleX(1); }
+}
 
 .vignette {
   position: absolute;
@@ -204,48 +218,31 @@
   background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.6));
 }
 
-/* ---------- Letterbox bars ---------- */
-.bar {
-  position: absolute;
-  left: 0;
-  right: 0;
-  z-index: 7;
-  height: 8vh;
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  background: #000;
-}
-.bar-top { top: 0; }
-.bar-bottom { bottom: 0; }
-/* The curtains: each covers half the screen, then shrinks to the bar size */
+/* The curtains: each covers half the screen, then slides away */
 .curtain { position: absolute; left: 0; right: 0; height: 50%; z-index: 6; background: #000; }
 .curtain-top { top: 0; transform-origin: top; }
 .curtain-bottom { bottom: 0; transform-origin: bottom; }
-.bar-inner {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
+
+.scroll-hint {
+  position: absolute;
+  left: 50%;
+  bottom: 22px;
+  z-index: 7;
+  transform: translateX(-50%);
+  display: inline-flex;
   align-items: center;
-  gap: 16px;
-  padding: 0 clamp(16px, 4vw, 48px);
-  font-size: 10.5px;
+  gap: 8px;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: 500 10.5px var(--body);
   letter-spacing: 0.28em;
   text-transform: uppercase;
-  color: rgba(239, 228, 204, 0.5);
+  color: rgba(239, 228, 204, 0.55);
+  transition: color 0.3s;
 }
-.bar-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  font-family: var(--display);
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: 0.3em;
-  color: var(--parchment);
-}
-.bar-brand img { width: 24px; height: 24px; border-radius: 50%; }
-.scroll-hint { display: inline-flex; align-items: center; gap: 8px; margin-left: auto; }
+.scroll-hint:hover { color: var(--parchment); }
 .scroll-hint svg { animation: nudge 2s ease-in-out infinite; }
 @keyframes nudge {
   0%, 100% { transform: translateY(0); }
@@ -254,85 +251,128 @@
 
 /* ---------- Crew ---------- */
 .crew {
-  padding: clamp(80px, 12vw, 150px) clamp(16px, 5vw, 64px);
+  padding: clamp(80px, 12vw, 150px) clamp(16px, 5vw, 64px) clamp(60px, 8vw, 100px);
   background: linear-gradient(var(--night), #0a1220 40%, #0d1626);
 }
-.crew-head { max-width: 760px; margin: 0 auto 64px; text-align: center; }
+.crew-head { max-width: 760px; margin: 0 auto 56px; text-align: center; }
 .crew-head h2 {
   margin: 0;
   font-family: var(--display);
   font-weight: 500;
-  font-size: clamp(28px, 4vw, 48px);
-  line-height: 1.12;
+  font-size: clamp(30px, 4.4vw, 52px);
+  line-height: 1.1;
   color: var(--parchment);
 }
-/* hairline grid instead of rounded cards */
+/* hairline frame instead of rounded cards */
 .crew-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1px;
-  max-width: 1120px;
+  grid-template-columns: repeat(2, 1fr);
+  max-width: 980px;
   margin: 0 auto;
-  background: rgba(201, 169, 106, 0.22);
   border: 1px solid rgba(201, 169, 106, 0.22);
 }
-.crew-card { position: relative; padding: 40px 32px 46px; background: #0b1422; }
-.crew-num { font-family: var(--display); font-size: 15px; letter-spacing: 0.2em; color: var(--gold); }
-.crew-tag {
+.crew-card + .crew-card { border-left: 1px solid rgba(201, 169, 106, 0.22); }
+.crew-card {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 36px 30px 36px 36px;
+  background: #0b1422;
+  transition: background 0.5s;
+}
+/* the second card is mirrored, so the two warriors face each other across the middle */
+.crew-card-flip { flex-direction: row-reverse; text-align: right; padding: 36px 36px 36px 30px; }
+.crew-text { position: relative; flex: 1; min-width: 0; }
+.crew-art { position: relative; width: min(150px, 38%); height: auto; flex-shrink: 0; filter: drop-shadow(0 0 22px rgba(201, 169, 106, 0.18)); transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1); }
+.crew-card:hover .crew-art { transform: translateY(-6px); }
+.crew-card-flip .crew-numeral { left: auto; right: 18px; }
+.crew-card-flip .crew-rule { margin-left: auto; transform-origin: right; }
+.crew-card:hover { background: #0e1a2c; }
+.crew-numeral {
   position: absolute;
-  top: 38px;
-  right: 28px;
-  padding: 4px 8px;
-  border: 1px solid rgba(201, 169, 106, 0.5);
-  font-size: 9.5px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: var(--gold);
+  left: 18px;
+  bottom: -40px;
+  font-family: var(--display);
+  font-size: 220px;
+  font-weight: 500;
+  line-height: 1;
+  color: rgba(201, 169, 106, 0.07);
+  pointer-events: none;
+  transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), color 0.8s;
 }
-.crew-icon { display: block; width: 96px; height: 96px; margin: 22px 0 18px; transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1); }
-.crew-card:hover .crew-icon { transform: translateY(-6px) rotate(-2deg); }
-.crew-card h3 { margin: 0; font-family: var(--display); font-weight: 500; font-size: 34px; color: var(--parchment); }
-.crew-role {
-  display: block;
-  margin: 6px 0 16px;
-  font-size: 11px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--gold);
+.crew-card:hover .crew-numeral { transform: translateY(-10px); color: rgba(201, 169, 106, 0.12); }
+.crew-num { font-family: var(--display); font-size: 15px; letter-spacing: 0.2em; color: var(--gold); }
+.crew-card h3 {
+  margin: 18px 0 0;
+  font-family: var(--display);
+  font-weight: 500;
+  font-size: clamp(36px, 4.2vw, 52px);
+  line-height: 1;
+  color: var(--parchment);
 }
-.crew-card p { margin: 0; font-size: 15px; line-height: 1.65; color: var(--parchment-dim); }
+.crew-rule { display: block; width: 48px; height: 1px; margin: 20px 0 14px; background: var(--gold); transform-origin: left; }
+.crew-title { font-size: 11px; letter-spacing: 0.26em; text-transform: uppercase; color: var(--gold); }
+.crew-foot {
+  margin: 40px 0 0;
+  text-align: center;
+  font-size: 10.5px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(239, 228, 204, 0.35);
+}
 
 /* ---------- Finale ---------- */
-.finale { padding: 110px 16px 140px; text-align: center; background: #0d1626; }
-.finale-meander { width: 200px; height: auto; color: #b8863a; margin-bottom: 40px; }
-.finale blockquote {
-  max-width: 900px;
+.finale { padding: 100px clamp(16px, 5vw, 64px) 130px; background: #0d1626; }
+.finale-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+  align-items: center;
+  gap: clamp(32px, 6vw, 80px);
+  max-width: 1060px;
   margin: 0 auto;
+}
+.gold-sack { display: block; width: 100%; max-width: 380px; margin: 0 auto; filter: drop-shadow(0 0 30px rgba(201, 169, 106, 0.16)); }
+.finale-bow { display: block; width: min(300px, 72%); height: auto; margin: 0 0 30px; filter: drop-shadow(0 0 24px rgba(201, 169, 106, 0.18)); }
+.finale blockquote {
+  margin: 0;
   font-family: var(--display);
   font-style: italic;
   font-weight: 500;
-  font-size: clamp(30px, 5vw, 60px);
+  font-size: clamp(30px, 4.2vw, 52px);
   line-height: 1.15;
   color: var(--parchment);
 }
-.finale-cite {
-  margin: 20px 0 44px;
-  font-size: 11.5px;
-  letter-spacing: 0.24em;
-  text-transform: uppercase;
-  color: rgba(239, 228, 204, 0.42);
+.finale-cta { margin-top: 52px; }
+
+/* ---------- The faint star chart behind the whole page ---------- */
+.voyage-chart {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 3;
+  pointer-events: none;
+  opacity: 0.14;
+  mix-blend-mode: screen;
 }
+.voyage-label { font-family: var(--display); font-style: italic; font-size: 19px; fill: #e9d5aa; letter-spacing: 0.02em; }
 
 /* ---------- Phones ---------- */
 @media (max-width: 860px) {
   .crew-grid { grid-template-columns: 1fr; }
-  .only-wide { display: none; }
+  .crew-card + .crew-card { border-left: none; border-top: 1px solid rgba(201, 169, 106, 0.22); }
   .hero-copy { top: 13vh; }
   .hero-copy .eyebrow-l { font-size: 9.5px; }
-  .ship { left: 50%; }
+  .ship { --ship-w: clamp(170px, 48vw, 260px); }
+  .finale-inner { grid-template-columns: 1fr; text-align: center; }
+  .finale-bow { margin-left: auto; margin-right: auto; }
+  .gold-sack { max-width: 260px; }
+  .crew-card, .crew-card-flip { padding: 30px 22px; }
 }
 
 /* People who turn off motion in their OS settings get a still page */
 @media (prefers-reduced-motion: reduce) {
-  .grain, .star, .cloud, .moon-path, .scroll-hint svg { animation: none; }
+  .grain, .star, .cloud, .glint, .scroll-hint svg { animation: none; }
 }

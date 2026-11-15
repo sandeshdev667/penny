@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 150" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <!-- An unrolled scroll (a ledger / bank statement), in the same bronze line art as ship-ink.png -->
+  <!-- parchment -->
+  <path d="M50 34 Q120 27 190 34 L190 116 Q120 123 50 116 Z" fill="#8a5a1f" fill-opacity="0.07" stroke="#8a5a1f" stroke-width="2"/>
+  <!-- title line -->
+  <path d="M68 46 H140" stroke="#8a5a1f" stroke-width="3.2"/>
+  <!-- ledger rows: description on the left, amount on the right -->
+  <path d="M68 60 H128 M68 71 H118 M68 82 H134 M68 93 H112 M68 104 H124" stroke="#8a5a1f" stroke-width="1.8"/>
+  <path d="M150 60 H172 M154 71 H172 M148 82 H172 M156 93 H172" stroke="#8a5a1f" stroke-width="1.8"/>
+  <path d="M60 54 H180" stroke="#8a5a1f" stroke-width="0.9" opacity="0.6"/>
+  <!-- wax seal with ribbon -->
+  <path d="M160 110 L155 128 L161 124 L165 130 L167 112 M172 110 L177 127 L171 123 L168 129" fill="#8a5a1f" stroke="#8a5a1f" stroke-width="1.2"/>
+  <circle cx="165" cy="105" r="11" fill="#8a5a1f"/>
+  <circle cx="165" cy="105" r="7.4" stroke="#fbf8f1" stroke-width="1.2"/>
+  <path d="M165 100.5 L166.3 103.7 L169.6 104 L167 106.1 L167.8 109.4 L165 107.6 L162.2 109.4 L163 106.1 L160.4 104 L163.7 103.7 Z" fill="#fbf8f1"/>
+  <!-- left roll with its handle -->
+  <rect x="30" y="27" width="22" height="96" rx="9" fill="#8a5a1f"/>
+  <path d="M36 36 V114 M41 33 V117 M46 36 V114" stroke="#fbf8f1" stroke-width="0.9" opacity="0.45"/>
+  <rect x="37" y="13" width="8" height="15" rx="2.5" fill="#8a5a1f"/>
+  <rect x="37" y="122" width="8" height="15" rx="2.5" fill="#8a5a1f"/>
+  <circle cx="41" cy="11" r="4.6" fill="#8a5a1f"/>
+  <circle cx="41" cy="139" r="4.6" fill="#8a5a1f"/>
+  <!-- right roll with its handle -->
+  <rect x="188" y="27" width="22" height="96" rx="9" fill="#8a5a1f"/>
+  <path d="M194 36 V114 M199 33 V117 M204 36 V114" stroke="#fbf8f1" stroke-width="0.9" opacity="0.45"/>
+  <rect x="195" y="13" width="8" height="15" rx="2.5" fill="#8a5a1f"/>
+  <rect x="195" y="122" width="8" height="15" rx="2.5" fill="#8a5a1f"/>
+  <circle cx="199" cy="11" r="4.6" fill="#8a5a1f"/>
+  <circle cx="199" cy="139" r="4.6" fill="#8a5a1f"/>
+</svg>

@@ -7,13 +7,14 @@ import { pool } from "./db.js"; // ".js" ending is correct, it loads db.ts
 import { parseReceipt, checkReceipt } from "./gemini.js";
 import { validateReceipt, saveReceipt } from "./receipts.js";
 import { askAthena, type ChatMessage } from "./athena.js";
+import { parseStatement, findDuplicates, validateImport, saveStatement } from "./statements.js";
 
 const app = express();
 const port = Number(process.env.PORT) || 3001;
 const TZ = process.env.APP_TIMEZONE || "America/Chicago";
 
 app.use(cors()); // allow the React app to call this API
-app.use(express.json()); // parse JSON request bodies
+app.use(express.json({ limit: "1mb" })); // parse JSON request bodies (1 MB: big statement imports)
 
 // Health check: a simple route to confirm the server is alive
 app.get("/api/health", (_req, res) => {
@@ -173,22 +174,30 @@ app.post("/api/receipts/parse", upload.single("image"), async (req, res) => {
   res.json({ receipt, problems: checkReceipt(receipt) });
 });
 
-// The last 5 saved receipts (for "Recent scans"), plus how many receipts there are in total
+// The last 5 saved receipts and statements (for "Recent scans"), plus how many receipts there are in total.
+// A statement shows up as ONE entry (kind = 'statement'), named after the bank, dated the day it was imported.
 app.get("/api/receipts/recent", async (_req, res) => {
   const recent = await pool.query(
     `SELECT r.id::int AS id,
-            MIN(t.merchant) AS merchant,
-            to_char(MIN(t.spent_at) AT TIME ZONE $1::text, 'YYYY-MM-DD') AS date,
+            COALESCE(r.raw->>'kind', 'receipt') AS kind,
+            CASE WHEN r.raw->>'kind' = 'statement'
+                 THEN COALESCE(r.raw->>'bank', 'Bank statement')
+                 ELSE MIN(t.merchant) END AS merchant,
+            to_char(CASE WHEN r.raw->>'kind' = 'statement' THEN r.uploaded_at ELSE MIN(t.spent_at) END
+                    AT TIME ZONE $1::text, 'YYYY-MM-DD') AS date,
             SUM(t.amount)::float AS total,
+            COUNT(*)::int AS lines,
             array_agg(DISTINCT t.category) AS categories
      FROM receipts r
      JOIN transactions t ON t.receipt_id = r.id
      GROUP BY r.id
-     ORDER BY MAX(r.uploaded_at) DESC
+     ORDER BY r.uploaded_at DESC
      LIMIT 5`,
     [TZ],
   );
-  const count = await pool.query("SELECT COUNT(*)::int AS count FROM receipts");
+  const count = await pool.query(
+    "SELECT COUNT(*)::int AS count FROM receipts WHERE raw->>'kind' IS DISTINCT FROM 'statement'",
+  );
   res.json({ receipts: recent.rows, count: count.rows[0].count });
 });
 
@@ -203,6 +212,45 @@ app.post("/api/receipts", async (req, res) => {
   }
   const saved = await saveReceipt(final, req.body?.original);
   res.json(saved);
+});
+
+// ---------- Bank statements ----------
+
+// Statement PDFs can be bigger than photos: up to 20 MB
+const uploadPdf = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } });
+
+// Step 1: Gemini reads every transaction in the PDF. We flag possible duplicates. Nothing is saved yet.
+app.post("/api/statements/parse", uploadPdf.single("statement"), async (req, res) => {
+  if (!req.file) {
+    res.status(400).json({ error: "No PDF uploaded (the form field must be named 'statement')" });
+    return;
+  }
+  if (req.file.mimetype !== "application/pdf") {
+    res.status(400).json({ error: "The file must be a PDF" });
+    return;
+  }
+  const { isStatement, bank, rows } = await parseStatement(req.file.buffer);
+  if (!isStatement || rows.length === 0) {
+    res.status(400).json({ error: "That doesn't look like a bank or card statement with transactions." });
+    return;
+  }
+  const duplicates = await findDuplicates(rows);
+  res.json({
+    bank,
+    transactions: rows.map((r, i) => ({ ...r, duplicate: duplicates.get(i) ?? null })),
+  });
+});
+
+// Step 2: save the rows the user ticked
+app.post("/api/statements", async (req, res) => {
+  let data;
+  try {
+    data = validateImport(req.body);
+  } catch (err) {
+    res.status(400).json({ error: err instanceof Error ? err.message : "Invalid statement" });
+    return;
+  }
+  res.json(await saveStatement(data));
 });
 
 // ---------- Ask Athena ----------

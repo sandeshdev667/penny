@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { motion } from "motion/react";
 import { EASE } from "./anim";
-import { CheckIcon } from "./icons";
-import shipIcon from "./assets/voyage.png";
-import templeIcon from "./assets/building.png";
-import islandIcon from "./assets/mountain.png";
+import { CheckIcon, IslandIcon, ScrollIcon, ShipIcon } from "./icons";
+import shipInk from "./assets/ship-ink.png";
 import RecentScans from "./RecentScans";
+import StatementImport, { type StatementStatus } from "./StatementImport";
 import { money } from "./format";
 import ReceiptReview from "./ReceiptReview";
 import type { ParsedReceipt, SaveResult } from "./receiptTypes";
@@ -37,13 +36,13 @@ const enter = {
 function Sailing() {
   return (
     <div className="sailing" aria-hidden>
-      <motion.img
-        src={shipIcon}
-        alt=""
+      <motion.span
         className="sailing-ship"
         animate={{ rotate: [-7, 6, -7], y: [0, -4, 0] }}
         transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
-      />
+      >
+        <ShipIcon size={56} />
+      </motion.span>
       <svg className="sailing-wave" viewBox="0 0 320 20" preserveAspectRatio="none">
         <path
           d="M0 10 Q10 2 20 10 T40 10 T60 10 T80 10 T100 10 T120 10 T140 10 T160 10 T180 10 T200 10 T220 10 T240 10 T260 10 T280 10 T300 10 T320 10"
@@ -72,6 +71,9 @@ export default function ScanPage({ onViewDashboard }: { onViewDashboard: () => v
   const [dragging, setDragging] = useState(false); // a file is being dragged over the box
   const [reviewFirst, setReviewFirst] = useState(loadReviewSetting);
   const [savedCount, setSavedCount] = useState(0); // goes up after each save, so "Recent scans" reloads
+  const [statementStatus, setStatementStatus] = useState<StatementStatus>("idle");
+  const statementOpen = statementStatus !== "idle" && statementStatus !== "error"; // hide the receipt box
+  const statementTable = statementStatus === "review" || statementStatus === "saving"; // needs the full width
 
   function changeReviewSetting(on: boolean) {
     setReviewFirst(on);
@@ -153,49 +155,66 @@ export default function ScanPage({ onViewDashboard }: { onViewDashboard: () => v
 
   return (
     <div className="scan-page">
-      <div className="scan-layout">
+      <div className={`scan-layout ${statementTable ? "scan-layout-wide" : ""}`}>
       <div className="content">
-      {/* ---------- Upload box: click it, or drag a photo onto it ---------- */}
+      {/* ---------- The two upload boxes, side by side: receipt photo | bank statement ---------- */}
       {(status === "idle" || status === "error") && (
-        <motion.label
-          {...enter}
-          className={`dropzone card ${dragging ? "dragging" : ""}`}
-          onDragOver={(e) => {
-            e.preventDefault(); // needed so the browser allows dropping
-            setDragging(true);
-          }}
-          onDragLeave={() => setDragging(false)}
-          onDrop={(e) => {
-            e.preventDefault();
-            setDragging(false);
-            const file = e.dataTransfer.files[0];
-            if (file) handleFile(file);
-          }}
-        >
-          <img src={shipIcon} alt="" className="dropzone-icon" />
-          <span className="dropzone-title">
-            <span className="only-desktop">Drop a receipt photo here</span>
-            <span className="only-touch">Scan a receipt</span>
-          </span>
-          <span className="dropzone-hint">Gemini reads the store, date, items and total.</span>
-          <span className="button">
-            <span className="only-desktop">Choose photo</span>
-            <span className="only-touch">Take photo or choose</span>
-          </span>
-          <input
-            type="file"
-            accept="image/*"
-            hidden
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) handleFile(file);
-              e.target.value = ""; // lets you pick the same file again
+        <div className="scan-options">
+        {/* ---------- Upload box: click it, or drag a photo onto it ---------- */}
+        {!statementOpen && (
+          <motion.label
+            {...enter}
+            className={`dropzone card ${dragging ? "dragging" : ""}`}
+            onDragOver={(e) => {
+              e.preventDefault(); // needed so the browser allows dropping
+              setDragging(true);
             }}
+            onDragLeave={() => setDragging(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragging(false);
+              const file = e.dataTransfer.files[0];
+              if (file) handleFile(file);
+            }}
+          >
+            {/* the ship, gently rocking (bronze line art, no background) */}
+            <motion.img
+              src={shipInk}
+              alt=""
+              className="dropzone-art"
+              animate={{ y: [0, -5, 0], rotate: [-1.5, 1.5, -1.5] }}
+              transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
+            />
+            <span className="dropzone-title">
+              <span className="only-desktop">Drop a receipt photo here</span>
+              <span className="only-touch">Scan a receipt</span>
+            </span>
+            <span className="dropzone-hint">Gemini reads the store, date, items and total.</span>
+            <span className="button">
+              <span className="only-desktop">Choose photo</span>
+              <span className="only-touch">Take photo or choose</span>
+            </span>
+            <input
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleFile(file);
+                e.target.value = ""; // lets you pick the same file again
+              }}
+            />
+          </motion.label>
+        )}
+          <StatementImport
+            onStatusChange={setStatementStatus}
+            onImported={() => setSavedCount((n) => n + 1)}
+            onViewDashboard={onViewDashboard}
           />
-        </motion.label>
+        </div>
       )}
 
-      {status === "error" && <div className="alert alert-error">{error}</div>}
+      {status === "error" && !statementOpen && <div className="alert alert-error">{error}</div>}
 
       {/* ---------- Reading / auto-saving: photo preview + spinner ---------- */}
       {(status === "reading" || (status === "saving" && !parsed)) && (
@@ -255,6 +274,7 @@ export default function ScanPage({ onViewDashboard }: { onViewDashboard: () => v
       )}
 
       {/* ---------- The switch ---------- */}
+      {!statementOpen && (
       <label className="switch">
         <input
           type="checkbox"
@@ -264,30 +284,32 @@ export default function ScanPage({ onViewDashboard }: { onViewDashboard: () => v
         <span className="switch-track" />
         <span>Review before saving</span>
       </label>
+      )}
 
       {/* ---------- How it works (only while nothing else is on screen) ---------- */}
-      {(status === "idle" || status === "error") && (
+      {(status === "idle" || status === "error") && !statementOpen && (
         <section className="how-it-works">
           <h2>How it works</h2>
           <ol>
             <li>
-              <img src={shipIcon} alt="" />
+              <span className="how-icon"><ShipIcon /></span>
               <span><strong>Snap or upload</strong> a photo of any receipt</span>
             </li>
             <li>
-              <img src={templeIcon} alt="" />
+              <span className="how-icon"><ScrollIcon /></span>
               <span><strong>AI reads every item</strong> and sorts it into a category</span>
             </li>
             <li>
-              <img src={islandIcon} alt="" />
+              <span className="how-icon"><IslandIcon /></span>
               <span><strong>Review and save.</strong> Your charts update right away</span>
             </li>
           </ol>
         </section>
       )}
+
       </div>
 
-      <RecentScans refreshKey={savedCount} />
+      {!statementTable && <RecentScans refreshKey={savedCount} />}
       </div>
     </div>
   );

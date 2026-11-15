@@ -8,7 +8,8 @@ export default defineConfig({
     // Any request to /api/... is forwarded to our Express server.
     // So the page can call "/api/..." and it works on laptop, phone, and after deploy.
     proxy: {
-      '/api': 'http://localhost:4000',
+      // (set API_URL to point at a different server, e.g. API_URL=http://localhost:4100 npm run dev)
+      '/api': process.env.API_URL || 'http://localhost:4000',
     },
   },
 })

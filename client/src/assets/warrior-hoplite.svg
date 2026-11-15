@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <g transform="translate(4 2) scale(1.75)" stroke-linecap="round" stroke-linejoin="round">
+    <!-- spear (behind) -->
+    <path d="M45 64 L58.4 9" stroke="#b5843d" stroke-width="1.6"/>
+    <path d="M59.6 2 C61.6 5.4 61.4 9.4 58.4 12.4 C56.6 9 57.2 5.2 59.6 2 Z" fill="#ecd29c" stroke="#0b1422" stroke-width="0.5"/>
+    <!-- shoulders and bronze cuirass -->
+    <path d="M7 66 L8 58 C13.5 52.4 22 50.6 32 50.6 C41 50.7 48 53 53 58.4 L54 66 Z" fill="#c4954a"/>
+    <path d="M31 51 C31.5 55 31.6 60 31 66 M22 54.2 C25 56.6 28 57.2 31 57 M40 54.2 C37 56.6 34 57.2 31 57" fill="none" stroke="#0b1422" stroke-width="0.8"/>
+    <!-- neck -->
+    <path d="M28 48 L39.6 48 L40.6 52.6 L27 53 Z" fill="#ecd09a"/>
+    <!-- horsehair crest -->
+    <path d="M15.5 30 C13.5 16 25 7.5 39 9 C46.5 9.8 51.5 13.8 53.5 20 C48.5 16.5 44 15.3 39 15.3 C28.5 15.3 21 20 19.5 28 Z" fill="#b5843d"/>
+    <path d="M20 22 L17 19.5 M25 16.5 L23.5 12.8 M31.5 13.8 L31.2 10 M38 13.5 L39.2 10 M44.5 14.6 L46.6 11.6" stroke="#0b1422" stroke-width="0.9"/>
+    <!-- Corinthian helmet (eye slot cut out) -->
+    <path fill="#d9b56a" fill-rule="evenodd" d="M17.5 45 C15 37 16 27.5 22.5 22.5 C27 19 32.5 17.5 38.5 18 C46.5 18.6 51.5 24 51.5 31.5 V35.5 L48.5 36.5 V47 C48.5 50 46.5 52 43.5 52 H40.5 V44.5 H36.5 C35.5 48.5 33 51.5 28.5 52.2 C23 53 18 50.5 13.5 48.5 Z M36.5 31.2 C39.5 29 44.8 29 48.8 31.2 C44.8 33.8 39.5 33.8 36.5 31.2 Z"/>
+    <path d="M22.5 29 C28.5 25.8 36.5 25 46 26.2 M20.5 44 C24 45.6 28 46 31.6 45.4" fill="none" stroke="#0b1422" stroke-width="0.9"/>
+    <!-- round shield (aspis) with a sun star -->
+    <circle cx="17" cy="50" r="14" fill="#b5843d" stroke="#ecd29c" stroke-width="1.6"/>
+    <circle cx="17" cy="50" r="10.6" fill="none" stroke="#0b1422" stroke-width="0.7"/>
+    <path d="M17 50 L17.00 41.40 M17 50 L23.08 43.92 M17 50 L25.60 50.00 M17 50 L23.08 56.08 M17 50 L17.00 58.60 M17 50 L10.92 56.08 M17 50 L8.40 50.00 M17 50 L10.92 43.92" stroke="#ecd29c" stroke-width="1.3"/>
+    <circle cx="17" cy="50" r="2.2" fill="#ecd29c"/>
+  </g>
+</svg>
