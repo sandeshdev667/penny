@@ -1,7 +1,7 @@
 // Bank statement import (on the Scan page):
 // upload a PDF -> Gemini reads every transaction -> review table -> import the ticked rows.
 
-import { useState } from "react";
+import { useImperativeHandle, useState, type Ref } from "react";
 import { motion } from "motion/react";
 import { EASE } from "./anim";
 import { money } from "./format";
@@ -46,13 +46,18 @@ const enter = {
   transition: { duration: 0.45, ease: EASE },
 };
 
+// What the Scan page can ask this component to do (a PDF dropped anywhere on the page comes here)
+export type StatementImportHandle = { importFile: (file: File) => void };
+
 type Props = {
   onStatusChange: (status: Status) => void; // the Scan page hides the receipt box while this is open
   onImported: () => void; // so "Recent scans" reloads
   onViewDashboard: () => void;
+  onImageDropped?: (file: File) => void; // a photo dropped on this box belongs to the receipt scanner
+  ref?: Ref<StatementImportHandle>;
 };
 
-export default function StatementImport({ onStatusChange, onImported, onViewDashboard }: Props) {
+export default function StatementImport({ onStatusChange, onImported, onViewDashboard, onImageDropped, ref }: Props) {
   const { t, cat } = useLang();
   const [status, setStatusRaw] = useState<Status>("idle");
   const [fileName, setFileName] = useState("");
@@ -95,6 +100,13 @@ export default function StatementImport({ onStatusChange, onImported, onViewDash
       setStatus("error");
     }
   }
+
+  // Lets the Scan page send us a PDF (only when we're not already busy with one)
+  useImperativeHandle(ref, () => ({
+    importFile(file: File) {
+      if (status === "idle" || status === "error") handleFile(file);
+    },
+  }));
 
   // ---------- Editing the table ----------
   function updateRow(index: number, changes: Partial<Row>) {
@@ -161,9 +173,13 @@ export default function StatementImport({ onStatusChange, onImported, onViewDash
         onDragLeave={() => setDragging(false)}
         onDrop={(e) => {
           e.preventDefault();
+          e.stopPropagation(); // handled here, so the page-wide drop catcher ignores it
           setDragging(false);
           const file = e.dataTransfer.files[0];
-          if (file) handleFile(file);
+          if (!file) return;
+          // A photo dropped on the statement box goes to the receipt scanner instead
+          if (file.type.startsWith("image/") && onImageDropped) onImageDropped(file);
+          else handleFile(file);
         }}
       >
         {/* an unrolled scroll, gently floating (same bronze line art as the ship) */}

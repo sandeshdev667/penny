@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { EASE } from "./anim";
 import { CheckIcon, IslandIcon, ScrollIcon, ShipIcon } from "./icons";
 import shipInk from "./assets/ship-ink.png";
 import RecentScans from "./RecentScans";
-import StatementImport, { type StatementStatus } from "./StatementImport";
+import StatementImport, { type StatementImportHandle, type StatementStatus } from "./StatementImport";
 import { money } from "./format";
 import { useLang } from "./lang";
 import ReceiptReview from "./ReceiptReview";
@@ -76,6 +76,7 @@ export default function ScanPage({ onViewDashboard }: { onViewDashboard: () => v
   const [statementStatus, setStatementStatus] = useState<StatementStatus>("idle");
   const statementOpen = statementStatus !== "idle" && statementStatus !== "error"; // hide the receipt box
   const statementTable = statementStatus === "review" || statementStatus === "saving"; // needs the full width
+  const statementRef = useRef<StatementImportHandle>(null);
 
   function changeReviewSetting(on: boolean) {
     setReviewFirst(on);
@@ -107,6 +108,39 @@ export default function ScanPage({ onViewDashboard }: { onViewDashboard: () => v
       showError(err);
     }
   }
+
+  // ---------- One "router" for every dropped file ----------
+  // PDFs go to the bank statement import, photos go to the receipt scanner,
+  // no matter which box (or which part of the page) they were dropped on.
+  function routeFile(file: File) {
+    const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+    if (isPdf) {
+      statementRef.current?.importFile(file); // ignored if the statement box is busy or hidden
+    } else if ((status === "idle" || status === "error") && !statementOpen) {
+      handleFile(file); // not an image? handleFile shows a friendly error
+    }
+  }
+
+  // Catch files dropped ANYWHERE on the page. Without this, a drop that misses the boxes
+  // makes the browser open the file itself and leave Penny.
+  const routeRef = useRef(routeFile);
+  useEffect(() => {
+    routeRef.current = routeFile; // always use the latest version (it depends on the current status)
+  });
+  useEffect(() => {
+    const allowDrop = (e: DragEvent) => e.preventDefault();
+    const onDrop = (e: DragEvent) => {
+      e.preventDefault(); // stop the browser from opening the file
+      const file = e.dataTransfer?.files[0];
+      if (file) routeRef.current(file);
+    };
+    window.addEventListener("dragover", allowDrop);
+    window.addEventListener("drop", onDrop);
+    return () => {
+      window.removeEventListener("dragover", allowDrop);
+      window.removeEventListener("drop", onDrop);
+    };
+  }, []);
 
   // Sends the photo to the server, which asks Gemini to read it
   async function handleFile(file: File) {
@@ -174,9 +208,10 @@ export default function ScanPage({ onViewDashboard }: { onViewDashboard: () => v
             onDragLeave={() => setDragging(false)}
             onDrop={(e) => {
               e.preventDefault();
+              e.stopPropagation(); // handled here, so the page-wide drop catcher ignores it
               setDragging(false);
               const file = e.dataTransfer.files[0];
-              if (file) handleFile(file);
+              if (file) routeFile(file); // a PDF dropped here goes to the statement import
             }}
           >
             {/* the ship, gently rocking (bronze line art, no background) */}
@@ -209,6 +244,8 @@ export default function ScanPage({ onViewDashboard }: { onViewDashboard: () => v
           </motion.label>
         )}
           <StatementImport
+            ref={statementRef}
+            onImageDropped={routeFile}
             onStatusChange={setStatementStatus}
             onImported={() => setSavedCount((n) => n + 1)}
             onViewDashboard={onViewDashboard}
