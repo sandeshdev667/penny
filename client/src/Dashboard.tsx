@@ -8,12 +8,38 @@ import {
   CartesianGrid,
   ResponsiveContainer,
 } from "recharts";
-import { usd } from "./format";
+import { usd, money } from "./format";
+import cupsIcon from "./assets/cups.png";
 
 type MonthlyTotal = { month: string; total: number };
 type CategoryTotal = { category: string; total: number };
 type Merchant = { merchant: string; visits: number; total: number };
 type Summary = { this_month: number; last_month: number; top_category: string | null };
+type Recurring = {
+  merchant: string;
+  category: string;
+  frequency: "monthly" | "weekly";
+  amount: number;
+  varies: boolean; // amount changes a little each time (e.g. internet bill)
+  next_charge: string; // "YYYY-MM-DD"
+  monthly_cost: number;
+};
+
+// Days from today until a "YYYY-MM-DD" date (negative = already passed)
+function daysUntil(date: string) {
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+  return Math.round((new Date(date + "T00:00").getTime() - start.getTime()) / 86400000);
+}
+
+// "Dec 1" style label for the next charge
+function nextLabel(date: string) {
+  const days = daysUntil(date);
+  if (days < 0) return "due now";
+  if (days === 0) return "due today";
+  if (days === 1) return "due tomorrow";
+  return "next ~" + new Date(date + "T00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
 
 // Formats "2026-08" as "Aug"
 const monthName = (month: string) =>
@@ -43,6 +69,7 @@ export default function Dashboard() {
   const [categories, setCategories] = useState<CategoryTotal[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null); // null = not loaded yet
   const [merchants, setMerchants] = useState<Merchant[]>([]);
+  const [recurring, setRecurring] = useState<Recurring[]>([]);
 
   // Load the data when the page opens, then check again every 5 seconds.
   // So a receipt scanned on your phone shows up here by itself.
@@ -53,6 +80,7 @@ export default function Dashboard() {
       load("/api/spending/categories", setCategories);
       load("/api/summary", setSummary);
       load("/api/merchants/top", setMerchants);
+      load("/api/recurring", setRecurring);
     }
 
     refresh();
@@ -68,6 +96,9 @@ export default function Dashboard() {
 
   // the biggest total, used to size each merchant's bar (biggest = full width)
   const topTotal = merchants[0]?.total ?? 1;
+
+  // all recurring charges added up, per month
+  const recurringPerMonth = recurring.reduce((sum, r) => sum + r.monthly_cost, 0);
 
   return (
     <div className="content">
@@ -139,6 +170,43 @@ export default function Dashboard() {
           </ol>
         </section>
       </div>
+
+      {/* Recurring charges, full width */}
+      <section className="card">
+        <div className="card-header">
+          <h2 className="with-icon">
+            <img src={cupsIcon} alt="" className="card-icon" />
+            Recurring charges
+          </h2>
+          {recurring.length > 0 && <span className="card-header-note">≈ {usd(recurringPerMonth)} / month</span>}
+        </div>
+
+        {recurring.length === 0 ? (
+          <p className="muted">No regular charges found yet.</p>
+        ) : (
+          <ul className="recurring-list">
+            {recurring.map((r) => {
+              const dueSoon = daysUntil(r.next_charge) <= 7;
+              return (
+                <li key={r.merchant} className={`recurring ${dueSoon ? "due-soon" : ""}`}>
+                  <div className="recurring-info">
+                    <span className="merchant-name">{r.merchant}</span>
+                    <span className="recurring-when">
+                      {r.frequency === "monthly" ? "Monthly" : "Weekly"} · {nextLabel(r.next_charge)}
+                      {dueSoon && <span className="due-badge">due soon</span>}
+                    </span>
+                  </div>
+                  <span className="tag">{r.category}</span>
+                  <span className="merchant-total">
+                    {r.varies ? "~" : ""}
+                    {money(r.amount)}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }
