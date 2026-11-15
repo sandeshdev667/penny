@@ -51,7 +51,7 @@ export default function RecentScans({ refreshKey }: { refreshKey: number }) {
 
       <ul className="recent-list">
         {data?.receipts.map((r) => (
-          <li key={r.id} className="recent-item">
+          <li key={`${r.kind}-${r.id}`} className="recent-item">
             <div className="recent-row">
               <span className="merchant-name">
                 {r.merchant}
