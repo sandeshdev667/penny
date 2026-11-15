@@ -176,28 +176,37 @@ app.post("/api/receipts/parse", upload.single("image"), async (req, res) => {
 
 // The last 5 saved receipts and statements (for "Recent scans"), plus how many receipts there are in total.
 // A statement shows up as ONE entry (kind = 'statement'), named after the bank, dated the day it was imported.
+// Receipts come from `receipts`, statements from `imports` (same response shape as before).
 app.get("/api/receipts/recent", async (_req, res) => {
   const recent = await pool.query(
-    `SELECT r.id::int AS id,
-            COALESCE(r.raw->>'kind', 'receipt') AS kind,
-            CASE WHEN r.raw->>'kind' = 'statement'
-                 THEN COALESCE(r.raw->>'bank', 'Bank statement')
-                 ELSE MIN(t.merchant) END AS merchant,
-            to_char(CASE WHEN r.raw->>'kind' = 'statement' THEN r.uploaded_at ELSE MIN(t.spent_at) END
-                    AT TIME ZONE $1::text, 'YYYY-MM-DD') AS date,
-            SUM(t.amount)::float AS total,
-            COUNT(*)::int AS lines,
-            array_agg(DISTINCT t.category) AS categories
-     FROM receipts r
-     JOIN transactions t ON t.receipt_id = r.id
-     GROUP BY r.id
-     ORDER BY r.uploaded_at DESC
+    `SELECT id, kind, merchant, date, total, lines, categories FROM (
+       SELECT r.id::int AS id,
+              'receipt' AS kind,
+              MIN(t.merchant) AS merchant,
+              to_char(MIN(t.spent_at) AT TIME ZONE $1::text, 'YYYY-MM-DD') AS date,
+              SUM(t.amount)::float AS total,
+              COUNT(*)::int AS lines,
+              array_agg(DISTINCT t.category) AS categories,
+              MAX(r.uploaded_at) AS uploaded_at
+       FROM receipts r JOIN transactions t ON t.receipt_id = r.id
+       GROUP BY r.id
+       UNION ALL
+       SELECT i.id::int,
+              'statement',
+              COALESCE(MIN(i.bank), 'Bank statement'),
+              to_char(MAX(i.uploaded_at) AT TIME ZONE $1::text, 'YYYY-MM-DD'),
+              SUM(t.amount)::float,
+              COUNT(*)::int,
+              array_agg(DISTINCT t.category),
+              MAX(i.uploaded_at)
+       FROM imports i JOIN transactions t ON t.import_id = i.id
+       GROUP BY i.id
+     ) AS uploads
+     ORDER BY uploaded_at DESC
      LIMIT 5`,
     [TZ],
   );
-  const count = await pool.query(
-    "SELECT COUNT(*)::int AS count FROM receipts WHERE raw->>'kind' IS DISTINCT FROM 'statement'",
-  );
+  const count = await pool.query("SELECT COUNT(*)::int AS count FROM receipts");
   res.json({ receipts: recent.rows, count: count.rows[0].count });
 });
 

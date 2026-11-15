@@ -24,3 +24,22 @@ CREATE TABLE IF NOT EXISTS transactions (
 
 -- Turn transactions into a TimescaleDB hypertable, organized by time
 SELECT create_hypertable('transactions', by_range('spent_at'), if_not_exists => TRUE);
+
+-- Update (Nov 14): bank statement imports.
+-- Allow 'statement' as a source (replace the old rule for databases created before this).
+ALTER TABLE transactions DROP CONSTRAINT IF EXISTS transactions_source_check;
+ALTER TABLE transactions ADD CONSTRAINT transactions_source_check
+  CHECK (source IN ('receipt','csv','seed','statement'));
+
+-- One row per imported statement; its transactions point back to it with import_id.
+-- (Kept separate from receipts so a statement's 40 rows don't count as one "visit".)
+CREATE TABLE IF NOT EXISTS imports (
+  id           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  uploaded_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  bank         TEXT,
+  period_start DATE,
+  period_end   DATE
+);
+ALTER TABLE imports ADD COLUMN IF NOT EXISTS file_name TEXT;
+ALTER TABLE imports ADD COLUMN IF NOT EXISTS raw JSONB;   -- what Gemini read + what the user kept
+ALTER TABLE transactions ADD COLUMN IF NOT EXISTS import_id BIGINT REFERENCES imports(id) ON DELETE CASCADE;

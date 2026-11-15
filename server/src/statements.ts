@@ -160,21 +160,25 @@ export function validateImport(input: unknown): { fileName: string; bank: string
   };
 }
 
-// One row in `receipts` for the whole statement (so Recent scans shows it once), plus one transaction per row
+// One row in `imports` for the whole statement (so Recent scans shows it once), plus one transaction per row.
+// Statements are kept OUT of `receipts` on purpose: rows sharing a receipt_id count as a single "visit",
+// so 40 statement rows stored as one receipt would break visit counts and duplicate checks.
 export async function saveStatement({ fileName, bank, rows }: ReturnType<typeof validateImport>) {
   const client = await pool.connect();
   try {
     await client.query("BEGIN"); // all-or-nothing
 
-    const saved = await client.query<{ id: string }>("INSERT INTO receipts (raw) VALUES ($1) RETURNING id", [
-      JSON.stringify({ kind: "statement", file_name: fileName, bank, rows }),
-    ]);
+    const dates = rows.map((r) => r.date).sort();
+    const saved = await client.query<{ id: string }>(
+      `INSERT INTO imports (bank, file_name, period_start, period_end, raw)
+       VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+      [bank, fileName, dates[0], dates[dates.length - 1], JSON.stringify({ kind: "statement", file_name: fileName, bank, rows })],
+    );
     const statementId = Number(saved.rows[0]!.id);
 
-    // 'csv' is the database's source for bank imports (statements are bank imports too)
     await client.query(
-      `INSERT INTO transactions (spent_at, merchant, category, amount, source, receipt_id)
-       SELECT ((d::date + time '12:00') AT TIME ZONE $1::text), m, c, a, 'csv', $2
+      `INSERT INTO transactions (spent_at, merchant, category, amount, source, import_id)
+       SELECT ((d::date + time '12:00') AT TIME ZONE $1::text), m, c, a, 'statement', $2
        FROM unnest($3::text[], $4::text[], $5::text[], $6::numeric[]) AS x(d, m, c, a)`,
       [
         TZ,
