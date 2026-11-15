@@ -6,7 +6,7 @@ import type { ErrorRequestHandler } from "express";
 import { pool } from "./db.js"; // ".js" ending is correct, it loads db.ts
 import { parseReceipt, checkReceipt } from "./gemini.js";
 import { validateReceipt, saveReceipt } from "./receipts.js";
-import { askAthena, type ChatMessage } from "./athena.js";
+import { askAthena, type ChatMessage, type Tone } from "./athena.js";
 import { parseStatement, findDuplicates, validateImport, saveStatement } from "./statements.js";
 
 const app = express();
@@ -276,7 +276,69 @@ app.post("/api/athena", async (req, res) => {
     return;
   }
   const history: ChatMessage[] = Array.isArray(req.body?.history) ? req.body.history : [];
-  res.json(await askAthena(question, history));
+  const tone: Tone = req.body?.tone === "modern" ? "modern" : "ancient";
+  res.json(await askAthena(question, history, tone));
+});
+
+// Athena's voice: turns her answer into speech with ElevenLabs. Returns an MP3.
+// The voice is found BY NAME (ELEVENLABS_VOICE_NAME in .env, default "Sandesh Aryal"), once, then remembered.
+const VOICE_NAME = process.env.ELEVENLABS_VOICE_NAME || "Sandesh Aryal";
+let voiceId: string | null = process.env.ELEVENLABS_VOICE_ID || null; // set this to skip the lookup
+
+async function findVoiceId(key: string): Promise<string> {
+  if (voiceId) return voiceId;
+  const res = await fetch("https://api.elevenlabs.io/v1/voices", {
+    headers: { "xi-api-key": key },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!res.ok) throw new Error(`voice list failed (${res.status})`);
+  const data = (await res.json()) as { voices?: { voice_id: string; name: string }[] };
+  const wanted = VOICE_NAME.trim().toLowerCase();
+  const voice = data.voices?.find((v) => v.name.trim().toLowerCase() === wanted);
+  if (!voice) {
+    console.warn(`ElevenLabs: no voice named "${VOICE_NAME}" in this account. Voices found: ${data.voices?.map((v) => v.name).join(", ")}`);
+    throw new Error(`no voice named "${VOICE_NAME}"`);
+  }
+  voiceId = voice.voice_id;
+  return voiceId;
+}
+
+app.post("/api/athena/speak", async (req, res) => {
+  const text = typeof req.body?.text === "string" ? req.body.text.trim().slice(0, 700) : "";
+  if (!text) {
+    res.status(400).json({ error: "Nothing to say" });
+    return;
+  }
+  const key = process.env.ELEVENLABS_API_KEY;
+  if (!key) {
+    res.status(501).json({ error: "Athena's voice is not set up (no ELEVENLABS_API_KEY)" });
+    return;
+  }
+  let id: string;
+  try {
+    id = await findVoiceId(key);
+  } catch (err) {
+    res.status(502).json({ error: err instanceof Error ? `Athena's voice: ${err.message}` : "Athena's voice could not be found" });
+    return;
+  }
+  const upstream = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(id)}?output_format=mp3_44100_64`, {
+    method: "POST",
+    headers: { "xi-api-key": key, "Content-Type": "application/json", Accept: "audio/mpeg" },
+    body: JSON.stringify({
+      text,
+      model_id: process.env.ELEVENLABS_MODEL || "eleven_multilingual_v2",
+      voice_settings: { stability: 0.5, similarity_boost: 0.8, style: 0.2 },
+    }),
+    signal: AbortSignal.timeout(25000),
+  });
+  if (!upstream.ok) {
+    const detail = await upstream.text().catch(() => "");
+    console.warn("ElevenLabs speech error:", upstream.status, detail.slice(0, 300));
+    res.status(502).json({ error: `Athena's voice could not be reached (${upstream.status})` });
+    return;
+  }
+  res.setHeader("Content-Type", "audio/mpeg");
+  res.send(Buffer.from(await upstream.arrayBuffer()));
 });
 
 // If any route throws an error, reply with JSON instead of an HTML error page

@@ -16,6 +16,22 @@ export type AthenaAnswer = {
   rows: Record<string, unknown>[];
 };
 
+// How Athena talks, in every reply: the goddess of wisdom, speaking to a traveller of Odysseus's age.
+const PERSONA_OLD = `PERSONA: You are Athena, grey-eyed goddess of wisdom and Odysseus's patron. Speak to the user as a
+traveller of the Bronze Age Mediterranean, in a warm, wise, slightly archaic voice (think a gentle translation of
+Homer, not Shakespeare): address them as "traveller", "wanderer" or "friend of the voyage". Refer to spending as
+coin, provisions, cargo or the voyage, and to the user's money records as "the ledger" or "your treasury".
+Examples: groceries are "provisions", dining is "feasts", transport is "voyages", subscriptions are "tributes that
+return each moon", a month is a "moon". Never mention computers, apps, databases, SQL, AI, or modern technology.
+Stay brief and clear. The numbers must stay exact and in dollars (like $1,234.56): never convert or round them.`;
+
+// The plain, modern way (when the user switches the language to "Newer")
+const PERSONA_NEW = `PERSONA: You are Athena, a warm, wise and concise assistant who helps people understand their spending.
+Speak in clear, friendly, modern English. Do not use archaic words, and do not mention computers, SQL or databases.
+Stay brief. The numbers must stay exact and in dollars (like $1,234.56): never convert or round them.`;
+
+export type Tone = "ancient" | "modern";
+
 // Today's date in the app's time zone, e.g. "2026-11-14 (Saturday)"
 function todayText() {
   const date = new Intl.DateTimeFormat("en-CA", { timeZone: TZ }).format(new Date());
@@ -47,8 +63,10 @@ const sqlSchema = {
   required: ["sql", "reply"],
 };
 
-function sqlPrompt(question: string, history: ChatMessage[]) {
+function sqlPrompt(question: string, history: ChatMessage[], tone: Tone) {
   return `You are Athena, the assistant inside Penny, a personal spending app. You write PostgreSQL (TimescaleDB) queries.
+(Only the "reply" text is shown to the user, and it must follow this persona.)
+${tone === "ancient" ? PERSONA_OLD : PERSONA_NEW}
 
 DATABASE (the only table you may use):
   transactions(
@@ -71,7 +89,7 @@ RULES:
 - Match merchant names loosely with ILIKE (e.g. merchant ILIKE '%starbucks%').
 - Keep results small: aggregate when possible, and add ORDER BY and LIMIT for lists.
 - If the question is not about the user's spending (e.g. "hi", "who are you"), set sql to null
-  and put a short friendly reply in reply.
+  and put a short reply in reply, in Athena's voice (a greeting, or what she can help with: the user's spending).
 
 CONVERSATION SO FAR:
 ${historyText(history)}
@@ -106,8 +124,8 @@ export async function runReadOnly(sql: string) {
 
 // ---------- Step 3: result -> friendly sentence ----------
 
-function answerPrompt(question: string, history: ChatMessage[], sql: string, rows: Record<string, unknown>[]) {
-  return `You are Athena, a friendly, wise assistant inside Penny, a personal spending app.
+function answerPrompt(question: string, history: ChatMessage[], sql: string, rows: Record<string, unknown>[], tone: Tone) {
+  return `${tone === "ancient" ? PERSONA_OLD : PERSONA_NEW}
 
 CONVERSATION SO FAR:
 ${historyText(history)}
@@ -116,18 +134,18 @@ The user asked: ${question}
 This query was run: ${sql}
 It returned ${rows.length} row(s): ${JSON.stringify(rows.slice(0, 50))}
 
-Answer the question in 1-3 short sentences using ONLY these results.
-Format money like $1,234.56. If there are no rows, say no matching spending was found.
-Plain text only, no markdown, no SQL.`;
+Answer the question in 1-3 short sentences using ONLY these results, in Athena's voice.
+Format money like $1,234.56. If there are no rows, say the ledger shows no such spending.
+Plain text only, no markdown, no SQL. Do not use emoji.`;
 }
 
 // ---------- The whole flow ----------
 
-export async function askAthena(question: string, history: ChatMessage[]): Promise<AthenaAnswer> {
+export async function askAthena(question: string, history: ChatMessage[], tone: Tone = "ancient"): Promise<AthenaAnswer> {
   const recent = history.slice(-6); // the last few messages are enough for follow-ups
 
   const plan = JSON.parse(
-    await generate(sqlPrompt(question, recent), {
+    await generate(sqlPrompt(question, recent, tone), {
       responseMimeType: "application/json",
       responseJsonSchema: sqlSchema,
       temperature: 0,
@@ -136,7 +154,7 @@ export async function askAthena(question: string, history: ChatMessage[]): Promi
 
   // No query needed (e.g. "hi"): one Gemini request instead of two
   if (!plan.sql) {
-    return { answer: plan.reply || "I can answer questions about your spending.", sql: null, columns: [], rows: [] };
+    return { answer: plan.reply || (tone === "ancient" ? "Ask me of your coin and your voyage, traveller, and I shall read the ledger for you." : "Ask me anything about your spending."), sql: null, columns: [], rows: [] };
   }
 
   let data;
@@ -145,13 +163,13 @@ export async function askAthena(question: string, history: ChatMessage[]): Promi
   } catch (err) {
     console.warn("Athena query failed:", err instanceof Error ? err.message : err, "\nSQL:", plan.sql);
     return {
-      answer: "I couldn't work that out from your data. Could you rephrase the question?",
+      answer: tone === "ancient" ? "The ledger would not yield that answer, traveller. Ask me again in other words." : "I couldn't work that out from your data. Could you rephrase the question?",
       sql: plan.sql,
       columns: [],
       rows: [],
     };
   }
 
-  const answer = await generate(answerPrompt(question, recent, plan.sql, data.rows), { temperature: 0.3 });
+  const answer = await generate(answerPrompt(question, recent, plan.sql, data.rows, tone), { temperature: 0.3 });
   return { answer: answer.trim(), sql: plan.sql, ...data };
 }
