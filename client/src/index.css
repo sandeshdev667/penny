@@ -257,7 +257,7 @@ h2 { font-size: 22px; letter-spacing: 0.005em; margin-bottom: 14px; }
 }
 
 /* ---------- Scan page ---------- */
-.scan-page { max-width: 660px; }
+.scan-page { max-width: 1100px; }
 
 .dropzone {
   display: flex;
@@ -393,3 +393,85 @@ h2 { font-size: 22px; letter-spacing: 0.005em; margin-bottom: 14px; }
 @media (prefers-reduced-motion: reduce) {
   .dropzone-icon, .sailing-wave { animation: none !important; }
 }
+
+/* ---------- Card header with icon (used by Recurring charges) ---------- */
+.card-header { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.card-header h2 { margin-bottom: 0; }
+.with-icon { display: flex; align-items: center; gap: 8px; }
+.card-icon { width: 28px; height: 28px; }
+.card-header-note { font-weight: 600; font-variant-numeric: tabular-nums; color: var(--bronze); }
+
+/* ---------- Recurring charges list ---------- */
+.recurring-list { list-style: none; margin: 0; padding: 0; }
+.recurring {
+  display: grid;
+  grid-template-columns: 1fr auto 100px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 8px;
+  border-bottom: 1px solid var(--line);
+}
+.recurring:last-child { border-bottom: none; }
+.recurring.due-soon { background: #fdf3d8; border-radius: 8px; }
+.recurring-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.recurring-when { font-size: 13px; color: var(--muted); }
+.recurring .merchant-total { text-align: right; }
+.due-badge {
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #8a5a0b;
+}
+
+@media (max-width: 640px) {
+  .recurring { grid-template-columns: 1fr auto; }
+  .recurring .tag { display: none; }
+}
+
+/* ---------- Scan page layout ---------- */
+.scan-layout { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
+
+.how-it-works h2 { font-size: 14px; margin: 8px 0 12px; }
+.how-it-works ol { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.how-it-works li { display: flex; align-items: center; gap: 12px; color: var(--muted); }
+.how-it-works li strong { color: var(--ink); font-weight: 600; }
+.how-it-works img { width: 36px; height: 36px; flex-shrink: 0; }
+
+/* Recent scans */
+.recent-list { list-style: none; margin: 0; padding: 0; }
+.recent-item { padding: 12px 0; border-bottom: 1px solid var(--line); }
+.recent-item:first-child { padding-top: 0; }
+.recent-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.recent-row + .recent-row { margin-top: 6px; }
+.recent-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.recent-date { font-size: 13px; color: var(--muted); white-space: nowrap; }
+.recent-count { font-size: 13px; margin-top: 12px; }
+
+@media (max-width: 900px) {
+  .scan-layout { grid-template-columns: 1fr; }
+}
+
+/* ---------- Ask Athena (simple on purpose: easy to restyle) ---------- */
+.athena { max-width: 800px; display: flex; flex-direction: column; gap: 16px; }
+.athena-header { display: flex; align-items: center; gap: 12px; }
+.athena-owl { width: 48px; height: 48px; }
+.athena-messages { display: flex; flex-direction: column; gap: 12px; }
+.athena-message { max-width: 85%; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--line); }
+.athena-message p { margin: 0; white-space: pre-wrap; }
+.athena-message.user { align-self: flex-end; background: var(--bronze); color: var(--paper-card); border: none; }
+.athena-message.athena { align-self: flex-start; background: var(--paper-card); }
+.athena-message.error { background: #fbe4dc; color: #8a2d12; }
+.athena-message.thinking { color: var(--muted); font-style: italic; }
+.athena-form { display: flex; gap: 8px; position: sticky; bottom: 16px; }
+.athena-form input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: white;
+}
+.athena-new-chat { margin-left: auto; }

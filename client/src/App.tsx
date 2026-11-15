@@ -3,6 +3,8 @@ import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import Landing from "./Landing";
 import Dashboard from "./Dashboard";
 import ScanPage from "./ScanPage";
+import AthenaPage from "./AthenaPage";
+import { useAthenaChat } from "./useAthenaChat";
 import Meander from "./Meander";
 import { EASE } from "./anim";
 import logoMark from "./assets/logo-mark.png";
@@ -40,6 +42,8 @@ export default function App() {
   const [entered, setEntered] = useState(loadEntered); // false = show the landing page
   const [page, setPage] = useState<Page>("dashboard"); // which page is showing right now
   const current = PAGES.find((p) => p.id === page)!;
+  // the Ask Athena conversation lives here, so it survives switching pages
+  const athenaChat = useAthenaChat();
 
   // "Start scanning" on the landing page
   function enter() {
@@ -120,25 +124,7 @@ export default function App() {
 
                   {page === "dashboard" && <Dashboard />}
                   {page === "scan" && <ScanPage onViewDashboard={() => setPage("dashboard")} />}
-                  {page === "athena" && (
-                    <div className="card athena-soon">
-                      <motion.img
-                        src={owlIcon}
-                        alt=""
-                        className="athena-owl"
-                        animate={{ y: [0, -8, 0] }}
-                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                      />
-                      <div>
-                        <h2>Athena is still on her way</h2>
-                        <p className="muted">
-                          Soon you'll ask questions about your spending in plain English, and she'll answer from
-                          your own data.
-                        </p>
-                        <span className="tag">Coming soon</span>
-                      </div>
-                    </div>
-                  )}
+                  {page === "athena" && <AthenaPage chat={athenaChat} />}
                 </motion.div>
               </AnimatePresence>
             </main>

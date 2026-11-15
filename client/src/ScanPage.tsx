@@ -3,6 +3,9 @@ import { motion } from "motion/react";
 import { EASE } from "./anim";
 import { CheckIcon } from "./icons";
 import shipIcon from "./assets/voyage.png";
+import templeIcon from "./assets/building.png";
+import islandIcon from "./assets/mountain.png";
+import RecentScans from "./RecentScans";
 import { money } from "./format";
 import ReceiptReview from "./ReceiptReview";
 import type { ParsedReceipt, SaveResult } from "./receiptTypes";
@@ -68,6 +71,7 @@ export default function ScanPage({ onViewDashboard }: { onViewDashboard: () => v
   const [error, setError] = useState("");
   const [dragging, setDragging] = useState(false); // a file is being dragged over the box
   const [reviewFirst, setReviewFirst] = useState(loadReviewSetting);
+  const [savedCount, setSavedCount] = useState(0); // goes up after each save, so "Recent scans" reloads
 
   function changeReviewSetting(on: boolean) {
     setReviewFirst(on);
@@ -94,6 +98,7 @@ export default function ScanPage({ onViewDashboard }: { onViewDashboard: () => v
       });
       setSaved(await readJson<SaveResult>(res));
       setStatus("saved");
+      setSavedCount((n) => n + 1);
     } catch (err) {
       showError(err);
     }
@@ -147,7 +152,9 @@ export default function ScanPage({ onViewDashboard }: { onViewDashboard: () => v
   }
 
   return (
-    <div className="content scan-page">
+    <div className="scan-page">
+      <div className="scan-layout">
+      <div className="content">
       {/* ---------- Upload box: click it, or drag a photo onto it ---------- */}
       {(status === "idle" || status === "error") && (
         <motion.label
@@ -257,6 +264,31 @@ export default function ScanPage({ onViewDashboard }: { onViewDashboard: () => v
         <span className="switch-track" />
         <span>Review before saving</span>
       </label>
+
+      {/* ---------- How it works (only while nothing else is on screen) ---------- */}
+      {(status === "idle" || status === "error") && (
+        <section className="how-it-works">
+          <h2>How it works</h2>
+          <ol>
+            <li>
+              <img src={shipIcon} alt="" />
+              <span><strong>Snap or upload</strong> a photo of any receipt</span>
+            </li>
+            <li>
+              <img src={templeIcon} alt="" />
+              <span><strong>AI reads every item</strong> and sorts it into a category</span>
+            </li>
+            <li>
+              <img src={islandIcon} alt="" />
+              <span><strong>Review and save.</strong> Your charts update right away</span>
+            </li>
+          </ol>
+        </section>
+      )}
+      </div>
+
+      <RecentScans refreshKey={savedCount} />
+      </div>
     </div>
   );
 }
