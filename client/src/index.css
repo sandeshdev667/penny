@@ -358,3 +358,26 @@ h2 { font-size: 16px; letter-spacing: 0.04em; margin-bottom: 12px; }
 @media (max-width: 900px) {
   .scan-layout { grid-template-columns: 1fr; }
 }
+
+/* ---------- Ask Athena (simple on purpose: easy to restyle) ---------- */
+.athena { max-width: 800px; display: flex; flex-direction: column; gap: 16px; }
+.athena-header { display: flex; align-items: center; gap: 12px; }
+.athena-owl { width: 48px; height: 48px; }
+.athena-messages { display: flex; flex-direction: column; gap: 12px; }
+.athena-message { max-width: 85%; padding: 12px 16px; border-radius: 12px; border: 1px solid var(--border); }
+.athena-message p { margin: 0; white-space: pre-wrap; }
+.athena-message.user { align-self: flex-end; background: var(--terracotta); color: var(--cream-light); border: none; }
+.athena-message.athena { align-self: flex-start; background: var(--cream-light); }
+.athena-message.error { background: #fbe4dc; color: #8a2d12; }
+.athena-message.thinking { color: var(--muted); font-style: italic; }
+.athena-form { display: flex; gap: 8px; position: sticky; bottom: 16px; }
+.athena-form input {
+  flex: 1;
+  min-width: 0;
+  font: inherit;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: white;
+}
+.athena-new-chat { margin-left: auto; }

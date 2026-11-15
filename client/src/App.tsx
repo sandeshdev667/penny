@@ -1,6 +1,8 @@
 import { useState } from "react";
 import Dashboard from "./Dashboard";
 import ScanPage from "./ScanPage";
+import AthenaPage from "./AthenaPage";
+import { useAthenaChat } from "./useAthenaChat";
 import logoMark from "./assets/logo-mark.png";
 import templeIcon from "./assets/building.png";
 import shipIcon from "./assets/voyage.png";
@@ -17,6 +19,8 @@ const PAGES: { id: Page; label: string; icon: string }[] = [
 export default function App() {
   // which page is showing right now
   const [page, setPage] = useState<Page>("dashboard");
+  // the Ask Athena conversation lives here, so it survives switching pages
+  const athenaChat = useAthenaChat();
 
   return (
     <div className="app">
@@ -44,12 +48,7 @@ export default function App() {
       <main className="main">
         {page === "dashboard" && <Dashboard />}
         {page === "scan" && <ScanPage onViewDashboard={() => setPage("dashboard")} />}
-        {page === "athena" && (
-          <div className="card">
-            <h2>Ask Athena</h2>
-            <p className="muted">Coming soon</p>
-          </div>
-        )}
+        {page === "athena" && <AthenaPage chat={athenaChat} />}
       </main>
     </div>
   );

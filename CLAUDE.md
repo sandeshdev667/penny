@@ -15,7 +15,7 @@ STACK:
   keep it simple and explain things.
 - Database: Tiger Cloud (hosted TimescaleDB, Postgres). One DB only. Raw
   receipt JSON goes in a JSONB column; transactions go in a hypertable.
-- AI: Gemini API (gemini-2.5-flash)
+- AI: Gemini API (gemini-3.6-flash)
 - Deploy later on Vultr. Sponsor prize tracks: Tiger Data, Gemini, Vultr.
 - I'm on a Mac, using VS Code.
 
