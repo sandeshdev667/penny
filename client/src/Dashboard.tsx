@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import {
   BarChart,
   Bar,
@@ -23,6 +23,20 @@ const monthName = (month: string) =>
 const now = new Date();
 const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
+// How often the dashboard checks for new data (milliseconds)
+const REFRESH_EVERY = 5000;
+
+// Fetches one API route and updates the state ONLY if the data actually changed.
+// (Skipping identical updates stops the charts from re-animating every 5 seconds.)
+function load<T>(url: string, setData: Dispatch<SetStateAction<T>>) {
+  fetch(url)
+    .then((res) => res.json())
+    .then((next: T) => setData((prev) => (JSON.stringify(prev) === JSON.stringify(next) ? prev : next)))
+    .catch(() => {
+      // server briefly unavailable (e.g. restarting): keep showing the old data
+    });
+}
+
 export default function Dashboard() {
   // each starts empty, then gets filled from the API
   const [monthly, setMonthly] = useState<MonthlyTotal[]>([]);
@@ -30,23 +44,26 @@ export default function Dashboard() {
   const [summary, setSummary] = useState<Summary | null>(null); // null = not loaded yet
   const [merchants, setMerchants] = useState<Merchant[]>([]);
 
-  // runs once when the page opens: ask the server for the data
+  // Load the data when the page opens, then check again every 5 seconds.
+  // So a receipt scanned on your phone shows up here by itself.
   useEffect(() => {
-    fetch("/api/spending/monthly")
-      .then((res) => res.json())
-      .then(setMonthly);
+    function refresh() {
+      if (document.hidden) return; // don't check while the tab is in the background
+      load("/api/spending/monthly", setMonthly);
+      load("/api/spending/categories", setCategories);
+      load("/api/summary", setSummary);
+      load("/api/merchants/top", setMerchants);
+    }
 
-    fetch("/api/spending/categories")
-      .then((res) => res.json())
-      .then(setCategories);
+    refresh();
+    const timer = setInterval(refresh, REFRESH_EVERY);
+    document.addEventListener("visibilitychange", refresh); // refresh right away when you come back to the tab
 
-    fetch("/api/summary")
-      .then((res) => res.json())
-      .then(setSummary);
-
-    fetch("/api/merchants/top")
-      .then((res) => res.json())
-      .then(setMerchants);
+    // cleanup when leaving the Dashboard page
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", refresh);
+    };
   }, []);
 
   // the biggest total, used to size each merchant's bar (biggest = full width)
