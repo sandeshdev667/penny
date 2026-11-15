@@ -1,4 +1,7 @@
 import { useState } from "react";
+import { motion } from "motion/react";
+import { EASE } from "./anim";
+import { CheckIcon } from "./icons";
 import shipIcon from "./assets/voyage.png";
 import { money } from "./format";
 import ReceiptReview from "./ReceiptReview";
@@ -18,6 +21,36 @@ function loadReviewSetting(): boolean {
   } catch {
     return true;
   }
+}
+
+// Each scan step fades in the same way
+const enter = {
+  initial: { opacity: 0, y: 14 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.45, ease: EASE },
+};
+
+// While Gemini reads: the ship rocks on a moving wave
+function Sailing() {
+  return (
+    <div className="sailing" aria-hidden>
+      <motion.img
+        src={shipIcon}
+        alt=""
+        className="sailing-ship"
+        animate={{ rotate: [-7, 6, -7], y: [0, -4, 0] }}
+        transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <svg className="sailing-wave" viewBox="0 0 320 20" preserveAspectRatio="none">
+        <path
+          d="M0 10 Q10 2 20 10 T40 10 T60 10 T80 10 T100 10 T120 10 T140 10 T160 10 T180 10 T200 10 T220 10 T240 10 T260 10 T280 10 T300 10 T320 10"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+      </svg>
+    </div>
+  );
 }
 
 // Reads the server's answer; turns error replies into a thrown Error with the server's message
@@ -117,7 +150,8 @@ export default function ScanPage({ onViewDashboard }: { onViewDashboard: () => v
     <div className="content scan-page">
       {/* ---------- Upload box: click it, or drag a photo onto it ---------- */}
       {(status === "idle" || status === "error") && (
-        <label
+        <motion.label
+          {...enter}
           className={`dropzone card ${dragging ? "dragging" : ""}`}
           onDragOver={(e) => {
             e.preventDefault(); // needed so the browser allows dropping
@@ -136,6 +170,7 @@ export default function ScanPage({ onViewDashboard }: { onViewDashboard: () => v
             <span className="only-desktop">Drop a receipt photo here</span>
             <span className="only-touch">Scan a receipt</span>
           </span>
+          <span className="dropzone-hint">Gemini reads the store, date, items and total.</span>
           <span className="button">
             <span className="only-desktop">Choose photo</span>
             <span className="only-touch">Take photo or choose</span>
@@ -150,20 +185,20 @@ export default function ScanPage({ onViewDashboard }: { onViewDashboard: () => v
               e.target.value = ""; // lets you pick the same file again
             }}
           />
-        </label>
+        </motion.label>
       )}
 
       {status === "error" && <div className="alert alert-error">{error}</div>}
 
       {/* ---------- Reading / auto-saving: photo preview + spinner ---------- */}
       {(status === "reading" || (status === "saving" && !parsed)) && (
-        <div className="card reading">
+        <motion.div {...enter} className="card reading">
           {preview && <img src={preview} alt="Your receipt" className="receipt-preview" />}
           <div className="reading-text">
-            <div className="spinner" />
+            <Sailing />
             <span>{status === "reading" ? "Reading your receipt…" : "Saving…"}</span>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* ---------- Review screen ---------- */}
@@ -179,8 +214,18 @@ export default function ScanPage({ onViewDashboard }: { onViewDashboard: () => v
 
       {/* ---------- Saved! ---------- */}
       {status === "saved" && saved && (
-        <div className="card saved">
-          <h2>✅ Saved</h2>
+        <motion.div {...enter} className="card saved">
+          <div className="saved-head">
+            <motion.span
+              className="saved-check"
+              initial={{ scale: 0.4, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 320, damping: 18, delay: 0.1 }}
+            >
+              <CheckIcon size={22} />
+            </motion.span>
+            <h2>Saved to the ledger</h2>
+          </div>
           <p className="saved-total">
             {saved.merchant} · {money(saved.total)}
           </p>
@@ -199,7 +244,7 @@ export default function ScanPage({ onViewDashboard }: { onViewDashboard: () => v
               Scan another
             </button>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* ---------- The switch ---------- */}

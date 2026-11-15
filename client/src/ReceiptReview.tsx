@@ -1,6 +1,9 @@
 // The review screen: shows what Gemini read, lets the user fix anything, then save.
 
 import { useState } from "react";
+import { motion } from "motion/react";
+import { EASE } from "./anim";
+import { CheckIcon, WarnIcon } from "./icons";
 import { CATEGORIES, type Category, type ParsedReceipt } from "./receiptTypes";
 import { money } from "./format";
 
@@ -69,7 +72,12 @@ export default function ReceiptReview({ receipt, problems, saving, onSave, onCan
   }
 
   return (
-    <div className="card review">
+    <motion.div
+      className="card review"
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.45, ease: EASE }}
+    >
       {problems.length > 0 && (
         <div className="alert alert-warning">
           <strong>Gemini wasn't sure about:</strong>
@@ -160,9 +168,10 @@ export default function ReceiptReview({ receipt, problems, saving, onSave, onCan
           <input className="num" inputMode="decimal" value={total} onChange={(e) => setTotal(e.target.value)} />
         </label>
         <p className={addsUp ? "check-ok" : "check-warn"}>
+          {addsUp ? <CheckIcon /> : <WarnIcon />}
           {addsUp
-            ? "✅ Adds up"
-            : `⚠️ Items + tax = ${money(itemsPlusTax)}${totalNumber !== null ? `, total says ${money(totalNumber)}` : ""}`}
+            ? "Adds up"
+            : `Items + tax = ${money(itemsPlusTax)}${totalNumber !== null ? `, total says ${money(totalNumber)}` : ""}`}
         </p>
       </div>
 
@@ -176,6 +185,6 @@ export default function ReceiptReview({ receipt, problems, saving, onSave, onCan
           {saving ? "Saving…" : `Save ${money(itemsPlusTax)}`}
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }
