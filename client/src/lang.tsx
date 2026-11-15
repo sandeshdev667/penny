@@ -76,23 +76,23 @@ const WORDS = {
   askNote: ["Even the gods err. Check the sums that matter.", "Athena can make mistakes. Double-check important numbers."],
   askSubtitle: ["reads only your own ledger", "answers from your own spending"],
 
-  // the Voyage map
+  // category toggle
+  allTime: ["All time", "All time"],
+  byMonth: ["By moon", "By month"],
+
+  // the 3D voyage
   voyTitle: ["The Voyage", "Your journey"],
-  voyNote: ["five moons sailed, one to go", "the last six months"],
-  provLabel: ["Provisions for this moon", "Budget for this month"],
-  provChange: ["Change", "Change"],
-  provReset: ["Reset", "Reset"],
-  provSet: ["Set", "Set"],
-  voyStorm: ["A storm gathers. At this pace the moon will cost about {a}, {b} beyond your provisions.", "You're on course to overspend. At this pace the month will cost about {a}, {b} over budget."],
-  voyFair: ["Fair winds. {a} of provisions remain, and the moon will end near {b}.", "On track. {a} of your budget remains, and the month will end near {b}."],
-  voyUsedUp: ["Your provisions are spent, but the moon is nearly done.", "Your budget is used up, but the month is nearly done."],
-  overBy: ["{a} over provisions", "{a} over budget"],
-  within: ["{a} within provisions", "{a} within budget"],
-  spentSoFar: ["{a} spent so far", "{a} spent so far"],
-  spentTotal: ["{a} spent", "{a} spent"],
-  home: ["Ithaca, home", "End of the month"],
-  homeExpect: ["At this pace: {a}", "At this pace: {a}"],
-  hoverHint: ["Touch an island to read its tally.", "Select a month to see its total."],
+  voyNote: ["sail from moon to moon", "sail from month to month"],
+  voyLoading: ["The ship is being readied…", "Loading the 3D view…"],
+  voyHint: ["Drag to look around · ← → or the arrows to sail", "Drag to look around · ← → or the arrows to sail"],
+  coinLegend: ["Each gold coin is {a}", "Each gold coin = {a}"],
+  sailingTo: ["Sailing to {a}…", "Sailing to {a}…"],
+  moonTotal: ["{a} spent this moon", "{a} spent this month"],
+  soFar: [" (so far)", " (so far)"],
+  nothingSpent: ["An empty isle: nothing spent this moon.", "No spending this month."],
+  prevMoon: ["Previous moon", "Previous month"],
+  nextMoon: ["Next moon", "Next month"],
+  noWebgl: ["Your browser cannot show the 3D voyage.", "Your browser can't show the 3D view."],
 } as const;
 
 export type WordKey = keyof typeof WORDS;

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
+import { lazy, Suspense, useEffect, useRef, useState, type Dispatch, type SetStateAction } from "react";
 import { animate, motion } from "motion/react";
 import {
   ComposedChart,
@@ -14,7 +14,8 @@ import {
 import { usd, money } from "./format";
 import { EASE, rise, stagger } from "./anim";
 import { RepeatIcon } from "./icons";
-import VoyageMap from "./VoyageMap";
+// the 3D voyage is big (three.js), so it is only downloaded when the dashboard opens
+const Voyage3D = lazy(() => import("./Voyage3D"));
 import { useLang } from "./lang";
 import shipImg from "./assets/ship.png";
 
@@ -68,6 +69,7 @@ function CountUp({ value }: { value: number }) {
 
 type MonthlyTotal = { month: string; total: number };
 type CategoryTotal = { category: string; total: number };
+export type MonthCategory = { month: string; category: string; total: number };
 type Merchant = { merchant: string; visits: number; total: number };
 type Summary = { this_month: number; last_month: number; top_category: string | null };
 type Recurring = {
@@ -129,6 +131,9 @@ export default function Dashboard() {
   const [summary, setSummary] = useState<Summary | null>(null); // null = not loaded yet
   const [merchants, setMerchants] = useState<Merchant[]>([]);
   const [recurring, setRecurring] = useState<Recurring[]>([]);
+  const [monthCats, setMonthCats] = useState<MonthCategory[]>([]); // each month, split by category
+  const [catView, setCatView] = useState<"all" | "month">("all"); // "By category": all time, or one month
+  const [catMonth, setCatMonth] = useState<string | null>(null); // which month (null = the latest)
 
   // Load the data when the page opens, then check again every 5 seconds.
   // So a receipt scanned on your phone shows up here by itself.
@@ -137,6 +142,7 @@ export default function Dashboard() {
       if (document.hidden) return; // don't check while the tab is in the background
       load("/api/spending/monthly", setMonthly);
       load("/api/spending/categories", setCategories);
+      load("/api/spending/monthly-categories", setMonthCats);
       load("/api/summary", setSummary);
       load("/api/merchants/top", setMerchants);
       load("/api/recurring", setRecurring);
@@ -156,7 +162,15 @@ export default function Dashboard() {
   // ---------- Numbers worked out from the data ----------
   const topTotal = merchants[0]?.total ?? 1; // biggest merchant = full-width bar
   const recurringPerMonth = recurring.reduce((sum, r) => sum + r.monthly_cost, 0);
-  const categoryTotal = categories.reduce((sum, c) => sum + c.total, 0) || 1;
+  // "By category" can show all time, or a single month (step through months with the arrows)
+  const catMonths = [...new Set(monthCats.map((r) => r.month))].sort();
+  const shownMonth = catMonth && catMonths.includes(catMonth) ? catMonth : catMonths[catMonths.length - 1];
+  const monthIndex = catMonths.indexOf(shownMonth);
+  const shownCategories: CategoryTotal[] =
+    catView === "all"
+      ? categories
+      : monthCats.filter((r) => r.month === shownMonth).map((r) => ({ category: r.category, total: r.total }));
+  const categoryTotal = shownCategories.reduce((sum, c) => sum + Math.max(0, c.total), 0) || 1;
 
   // average of the FINISHED months (the current month isn't over yet)
   const fullMonths = monthly.filter((m) => m.month !== thisMonth);
@@ -222,18 +236,6 @@ export default function Dashboard() {
           </div>
         )}
       </motion.section>
-
-      {/* ---------- The Voyage: months as islands, budget as provisions ---------- */}
-      <motion.div variants={rise}>
-        <VoyageMap
-          monthly={monthly}
-          thisMonth={thisMonth}
-          spentSoFar={summary?.this_month ?? 0}
-          pace={pace}
-          dayOfMonth={dayOfMonth}
-          daysInMonth={daysInMonth}
-        />
-      </motion.div>
 
       {/* ---------- Monthly spending ---------- */}
       <motion.section className="card" variants={rise}>
@@ -301,15 +303,53 @@ export default function Dashboard() {
         </ResponsiveContainer>
       </motion.section>
 
+      {/* ---------- The Voyage: sail between months in 3D; gold coins show what was spent ---------- */}
+      <motion.div variants={rise}>
+        <Suspense fallback={<section className="card voyage3d-loading">{t("voyLoading")}</section>}>
+          <Voyage3D monthCats={monthCats} thisMonth={thisMonth} />
+        </Suspense>
+      </motion.div>
+
       <div className="grid-2">
         {/* ---------- Categories: one stacked bar + the list ---------- */}
         <motion.section className="card" variants={rise}>
           <div className="card-head">
             <h2>{t("byCategory")}</h2>
-            <span className="card-note">all time</span>
+            {/* all time, or one month at a time */}
+            <div className="cat-controls">
+              <div className="seg" role="group" aria-label="Category period">
+                <button className={catView === "all" ? "is-on" : ""} onClick={() => setCatView("all")} aria-pressed={catView === "all"}>
+                  {t("allTime")}
+                </button>
+                <button className={catView === "month" ? "is-on" : ""} onClick={() => setCatView("month")} aria-pressed={catView === "month"}>
+                  {t("byMonth")}
+                </button>
+              </div>
+              {catView === "month" && shownMonth && (
+                <div className="month-step">
+                  <button
+                    className="icon-button"
+                    onClick={() => setCatMonth(catMonths[monthIndex - 1])}
+                    disabled={monthIndex <= 0}
+                    aria-label="Previous month"
+                  >
+                    ‹
+                  </button>
+                  <span>{new Date(shownMonth + "-01T00:00").toLocaleDateString("en-US", { month: "short", year: "numeric" })}</span>
+                  <button
+                    className="icon-button"
+                    onClick={() => setCatMonth(catMonths[monthIndex + 1])}
+                    disabled={monthIndex >= catMonths.length - 1}
+                    aria-label="Next month"
+                  >
+                    ›
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
           <div className="category-strip">
-            {categories.map((c, i) => (
+            {shownCategories.filter((c) => c.total > 0).map((c, i) => (
               <motion.span
                 key={c.category}
                 style={{ background: colorFor(c.category) }}
@@ -321,7 +361,7 @@ export default function Dashboard() {
             ))}
           </div>
           <ul className="category-list">
-            {categories.map((c) => (
+            {shownCategories.map((c) => (
               <li key={c.category}>
                 <i style={{ background: colorFor(c.category) }} />
                 <span className="category-name">{cat(c.category)}</span>

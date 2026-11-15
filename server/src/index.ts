@@ -144,6 +144,20 @@ app.get("/api/recurring", async (_req, res) => {
   res.json(result.rows);
 });
 
+// Spending per month AND category (for the 3D voyage and the "by month" category view)
+app.get("/api/spending/monthly-categories", async (_req, res) => {
+  const result = await pool.query(
+    `SELECT to_char(time_bucket('1 month', spent_at, $1::text) AT TIME ZONE $1::text, 'YYYY-MM') AS month,
+            category,
+            SUM(amount)::float AS total
+     FROM transactions
+     GROUP BY month, category
+     ORDER BY month, total DESC`,
+    [TZ],
+  );
+  res.json(result.rows);
+});
+
 // Total spending per category, biggest first
 app.get("/api/spending/categories", async (_req, res) => {
   const result = await pool.query(
@@ -281,8 +295,11 @@ app.post("/api/athena", async (req, res) => {
 });
 
 // Athena's voice: turns her answer into speech with ElevenLabs. Returns an MP3.
-// The voice is found BY NAME (ELEVENLABS_VOICE_NAME in .env, default "Sandesh Aryal"), once, then remembered.
-const VOICE_NAME = process.env.ELEVENLABS_VOICE_NAME || "Sandesh Aryal";
+// The voice is found BY NAME, once, then remembered. Athena uses a female voice: the first of these
+// ElevenLabs voices that your account has (or set ELEVENLABS_VOICE_NAME in .env to choose one yourself).
+const VOICE_NAMES = process.env.ELEVENLABS_VOICE_NAME
+  ? [process.env.ELEVENLABS_VOICE_NAME]
+  : ["Alice", "Matilda", "Lily", "Sarah", "Rachel", "Charlotte", "Laura"];
 let voiceId: string | null = process.env.ELEVENLABS_VOICE_ID || null; // set this to skip the lookup
 
 async function findVoiceId(key: string): Promise<string> {
@@ -293,12 +310,14 @@ async function findVoiceId(key: string): Promise<string> {
   });
   if (!res.ok) throw new Error(`voice list failed (${res.status})`);
   const data = (await res.json()) as { voices?: { voice_id: string; name: string }[] };
-  const wanted = VOICE_NAME.trim().toLowerCase();
-  const voice = data.voices?.find((v) => v.name.trim().toLowerCase() === wanted);
+  // voice names can carry a description, e.g. "Alice - Clear, Engaging Educator"
+  const nameOf = (v: { name: string }) => v.name.split(" - ")[0].trim().toLowerCase();
+  const voice = VOICE_NAMES.map((n) => data.voices?.find((v) => nameOf(v) === n.toLowerCase())).find(Boolean);
   if (!voice) {
-    console.warn(`ElevenLabs: no voice named "${VOICE_NAME}" in this account. Voices found: ${data.voices?.map((v) => v.name).join(", ")}`);
-    throw new Error(`no voice named "${VOICE_NAME}"`);
+    console.warn(`ElevenLabs: none of ${VOICE_NAMES.join(", ")} found. Voices in this account: ${data.voices?.map((v) => v.name).join(", ")}`);
+    throw new Error(`no voice named ${VOICE_NAMES.join(" or ")}`);
   }
+  console.log(`Athena's voice: ${voice.name}`);
   voiceId = voice.voice_id;
   return voiceId;
 }
