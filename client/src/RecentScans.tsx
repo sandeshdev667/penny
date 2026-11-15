@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { money } from "./format";
+import { useLang } from "./lang";
 
 type RecentReceipt = {
   id: number;
@@ -31,6 +32,7 @@ function dateLabel(date: string) {
 
 // `refreshKey` changes after each save, which makes this list reload
 export default function RecentScans({ refreshKey }: { refreshKey: number }) {
+  const { t, cat } = useLang();
   const [data, setData] = useState<RecentData | null>(null);
 
   useEffect(() => {
@@ -44,10 +46,10 @@ export default function RecentScans({ refreshKey }: { refreshKey: number }) {
 
   return (
     <aside className="card recent">
-      <h2>Recent scans</h2>
+      <h2>{t("recentTitle")}</h2>
 
       {data === null && <p className="muted">Loading…</p>}
-      {data?.receipts.length === 0 && <p className="muted">No receipts yet. Your first scan will show up here.</p>}
+      {data?.receipts.length === 0 && <p className="muted">{t("recentEmpty")}</p>}
 
       <ul className="recent-list">
         {data?.receipts.map((r) => (
@@ -66,7 +68,7 @@ export default function RecentScans({ refreshKey }: { refreshKey: number }) {
                 <span className="recent-tags">
                   {r.categories.map((c) => (
                     <span key={c} className="tag">
-                      {c}
+                      {cat(c)}
                     </span>
                   ))}
                 </span>
@@ -79,7 +81,7 @@ export default function RecentScans({ refreshKey }: { refreshKey: number }) {
 
       {data && data.count > 0 && (
         <p className="muted recent-count">
-          {data.count} {data.count === 1 ? "receipt" : "receipts"} scanned so far
+          {t("recentCount", { a: data.count, b: data.count === 1 ? "receipt" : "receipts" })}
         </p>
       )}
     </aside>

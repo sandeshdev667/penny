@@ -109,6 +109,24 @@ export function ScrollIcon(p: IconProps) {
   );
 }
 
+export function SpeakerIcon({ muted, ...p }: IconProps & { muted?: boolean }) {
+  return (
+    <Line {...p}>
+      <path d="M4 9.5h3.5L12 6v12l-4.5-3.5H4Z" />
+      {muted ? <path d="m16 9.5 4 5m0-5-4 5" /> : <path d="M15.5 9.2a4 4 0 0 1 0 5.6M18 6.8a7.5 7.5 0 0 1 0 10.4" />}
+    </Line>
+  );
+}
+
+export function MicIcon(p: IconProps) {
+  return (
+    <Line {...p}>
+      <rect x="9" y="3.5" width="6" height="11" rx="3" />
+      <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6" />
+    </Line>
+  );
+}
+
 export function PlusIcon(p: IconProps) {
   return (
     <Line {...p}>

@@ -14,6 +14,8 @@ import {
 import { usd, money } from "./format";
 import { EASE, rise, stagger } from "./anim";
 import { RepeatIcon } from "./icons";
+import VoyageMap from "./VoyageMap";
+import { useLang } from "./lang";
 import shipImg from "./assets/ship.png";
 
 // Chart colors (match the CSS theme)
@@ -120,6 +122,7 @@ function load<T>(url: string, setData: Dispatch<SetStateAction<T>>) {
 }
 
 export default function Dashboard() {
+  const { t, cat } = useLang();
   // each starts empty, then gets filled from the API
   const [monthly, setMonthly] = useState<MonthlyTotal[]>([]);
   const [categories, setCategories] = useState<CategoryTotal[]>([]);
@@ -178,25 +181,25 @@ export default function Dashboard() {
         <img src={shipImg} alt="" className="ledger-ship" aria-hidden />
 
         <div className="ledger-main">
-          <span className="ledger-label">This month so far</span>
+          <span className="ledger-label">{t("thisSoFar")}</span>
           <span className="ledger-value">{summary ? <CountUp value={summary.this_month} /> : "—"}</span>
           <span className="ledger-note">
-            Day {dayOfMonth} of {daysInMonth}
-            {summary && summary.this_month > 0 && <> · on pace for about {usd(pace)}</>}
+            {t("dayLine", { a: dayOfMonth, b: daysInMonth })}
+            {summary && summary.this_month > 0 && t("paceLine", { a: usd(pace) })}
           </span>
         </div>
 
         <dl className="ledger-side">
           <div>
-            <dt>Last month</dt>
+            <dt>{t("lastPeriod")}</dt>
             <dd>{summary ? usd(summary.last_month) : "—"}</dd>
           </div>
           <div>
-            <dt>Top category</dt>
-            <dd>{summary?.top_category ?? "—"}</dd>
+            <dt>{t("greatest")}</dt>
+            <dd>{summary?.top_category ? cat(summary.top_category) : "—"}</dd>
           </div>
           <div>
-            <dt>Recurring</dt>
+            <dt>{t("tributes")}</dt>
             <dd>{recurring.length ? `≈ ${usd(recurringPerMonth)}/mo` : "—"}</dd>
           </div>
         </dl>
@@ -214,19 +217,30 @@ export default function Dashboard() {
               <span className="meter-today" style={{ left: `${monthGone * 100}%` }} title="Today" />
             </div>
             <span className="meter-caption">
-              {Math.round(shareOfLast * 100)}% of last month's total spent · {Math.round(monthGone * 100)}% of the
-              month gone
+              {t("meterCaption", { a: Math.round(shareOfLast * 100), b: Math.round(monthGone * 100) })}
             </span>
           </div>
         )}
       </motion.section>
 
+      {/* ---------- The Voyage: months as islands, budget as provisions ---------- */}
+      <motion.div variants={rise}>
+        <VoyageMap
+          monthly={monthly}
+          thisMonth={thisMonth}
+          spentSoFar={summary?.this_month ?? 0}
+          pace={pace}
+          dayOfMonth={dayOfMonth}
+          daysInMonth={daysInMonth}
+        />
+      </motion.div>
+
       {/* ---------- Monthly spending ---------- */}
       <motion.section className="card" variants={rise}>
         <div className="card-head">
-          <h2>Spending by month</h2>
+          <h2>{t("spendByPeriod")}</h2>
           <span className="legend">
-            <i className="legend-solid" /> full month <i className="legend-dashed" /> so far
+            <i className="legend-solid" /> {t("legendFull")} <i className="legend-dashed" /> so far
             {monthlyAverage > 0 && (
               <>
                 <i className="legend-line" /> average
@@ -291,7 +305,7 @@ export default function Dashboard() {
         {/* ---------- Categories: one stacked bar + the list ---------- */}
         <motion.section className="card" variants={rise}>
           <div className="card-head">
-            <h2>By category</h2>
+            <h2>{t("byCategory")}</h2>
             <span className="card-note">all time</span>
           </div>
           <div className="category-strip">
@@ -302,7 +316,7 @@ export default function Dashboard() {
                 initial={{ flexGrow: 0 }}
                 animate={{ flexGrow: c.total }}
                 transition={{ duration: 1, delay: 0.2 + i * 0.04, ease: EASE }}
-                title={`${c.category}: ${usd(c.total)}`}
+                title={`${cat(c.category)}: ${usd(c.total)}`}
               />
             ))}
           </div>
@@ -310,7 +324,7 @@ export default function Dashboard() {
             {categories.map((c) => (
               <li key={c.category}>
                 <i style={{ background: colorFor(c.category) }} />
-                <span className="category-name">{c.category}</span>
+                <span className="category-name">{cat(c.category)}</span>
                 <span className="category-share">{Math.round((c.total / categoryTotal) * 100)}%</span>
                 <span className="merchant-total">{usd(c.total)}</span>
               </li>
@@ -321,8 +335,8 @@ export default function Dashboard() {
         {/* ---------- Top merchants ---------- */}
         <motion.section className="card" variants={rise}>
           <div className="card-head">
-            <h2>Top merchants</h2>
-            <span className="card-note">everyday spending</span>
+            <h2>{t("merchantsTitle")}</h2>
+            <span className="card-note">{t("merchantsNote")}</span>
           </div>
           <ol className="merchant-list">
             {merchants.map((m, i) => (
@@ -354,13 +368,13 @@ export default function Dashboard() {
         <div className="card-head">
           <h2 className="with-icon">
             <RepeatIcon className="card-icon" />
-            Recurring charges
+            {t("recurringTitle")}
           </h2>
           {recurring.length > 0 && <span className="card-header-note">≈ {usd(recurringPerMonth)} / month</span>}
         </div>
 
         {recurring.length === 0 ? (
-          <p className="muted">No regular charges found yet.</p>
+          <p className="muted">{t("recurringNone")}</p>
         ) : (
           <ul className="recurring-list">
             {recurring.map((r) => {
@@ -374,7 +388,7 @@ export default function Dashboard() {
                       {dueSoon && <span className="due-badge">due soon</span>}
                     </span>
                   </div>
-                  <span className="tag">{r.category}</span>
+                  <span className="tag">{cat(r.category)}</span>
                   <span className="merchant-total">
                     {r.varies ? "~" : ""}
                     {money(r.amount)}

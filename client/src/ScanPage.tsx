@@ -6,6 +6,7 @@ import shipInk from "./assets/ship-ink.png";
 import RecentScans from "./RecentScans";
 import StatementImport, { type StatementStatus } from "./StatementImport";
 import { money } from "./format";
+import { useLang } from "./lang";
 import ReceiptReview from "./ReceiptReview";
 import type { ParsedReceipt, SaveResult } from "./receiptTypes";
 
@@ -63,6 +64,7 @@ async function readJson<T>(res: Response): Promise<T> {
 }
 
 export default function ScanPage({ onViewDashboard }: { onViewDashboard: () => void }) {
+  const { t, cat } = useLang();
   const [status, setStatus] = useState<Status>("idle");
   const [preview, setPreview] = useState<string | null>(null); // photo preview URL
   const [parsed, setParsed] = useState<ParseResult | null>(null);
@@ -186,12 +188,12 @@ export default function ScanPage({ onViewDashboard }: { onViewDashboard: () => v
               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
             />
             <span className="dropzone-title">
-              <span className="only-desktop">Drop a receipt photo here</span>
-              <span className="only-touch">Scan a receipt</span>
+              <span className="only-desktop">{t("dropTitle")}</span>
+              <span className="only-touch">{t("dropTouch")}</span>
             </span>
-            <span className="dropzone-hint">Gemini reads the store, date, items and total.</span>
+            <span className="dropzone-hint">{t("dropHint")}</span>
             <span className="button">
-              <span className="only-desktop">Choose photo</span>
+              <span className="only-desktop">{t("choosePhoto")}</span>
               <span className="only-touch">Take photo or choose</span>
             </span>
             <input
@@ -222,7 +224,7 @@ export default function ScanPage({ onViewDashboard }: { onViewDashboard: () => v
           {preview && <img src={preview} alt="Your receipt" className="receipt-preview" />}
           <div className="reading-text">
             <Sailing />
-            <span>{status === "reading" ? "Reading your receipt…" : "Saving…"}</span>
+            <span>{status === "reading" ? t("reading") : t("saving")}</span>
           </div>
         </motion.div>
       )}
@@ -250,7 +252,7 @@ export default function ScanPage({ onViewDashboard }: { onViewDashboard: () => v
             >
               <CheckIcon size={22} />
             </motion.span>
-            <h2>Saved to the ledger</h2>
+            <h2>{t("savedTitle")}</h2>
           </div>
           <p className="saved-total">
             {saved.merchant} · {money(saved.total)}
@@ -258,16 +260,16 @@ export default function ScanPage({ onViewDashboard }: { onViewDashboard: () => v
           <ul className="saved-parts">
             {saved.parts.map((p) => (
               <li key={p.category}>
-                <span className="tag">{p.category}</span> {money(p.amount)}
+                <span className="tag">{cat(p.category)}</span> {money(p.amount)}
               </li>
             ))}
           </ul>
           <div className="review-actions">
             <button className="button button-secondary" onClick={onViewDashboard}>
-              View dashboard
+              {t("toDash")}
             </button>
             <button className="button" onClick={reset}>
-              Scan another
+              {t("another")}
             </button>
           </div>
         </motion.div>
@@ -282,7 +284,7 @@ export default function ScanPage({ onViewDashboard }: { onViewDashboard: () => v
           onChange={(e) => changeReviewSetting(e.target.checked)}
         />
         <span className="switch-track" />
-        <span>Review before saving</span>
+        <span>{t("reviewSwitch")}</span>
       </label>
       )}
 
@@ -293,15 +295,15 @@ export default function ScanPage({ onViewDashboard }: { onViewDashboard: () => v
           <ol>
             <li>
               <span className="how-icon"><ShipIcon /></span>
-              <span><strong>Snap or upload</strong> a photo of any receipt</span>
+              <span><strong>{t("how1")}</strong>{t("how1r")}</span>
             </li>
             <li>
               <span className="how-icon"><ScrollIcon /></span>
-              <span><strong>AI reads every item</strong> and sorts it into a category</span>
+              <span><strong>{t("how2")}</strong>{t("how2r")}</span>
             </li>
             <li>
               <span className="how-icon"><IslandIcon /></span>
-              <span><strong>Review and save.</strong> Your charts update right away</span>
+              <span><strong>{t("how3")}</strong>{t("how3r")}</span>
             </li>
           </ol>
         </section>

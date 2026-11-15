@@ -3,7 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { EASE } from "./anim";
-import { PlusIcon, SendIcon } from "./icons";
+import { MicIcon, PlusIcon, SendIcon, SpeakerIcon } from "./icons";
+import { useAthenaVoice } from "./useAthenaVoice";
+import { useLang } from "./lang";
 import athenaMark from "./assets/athena-mark.svg";
 import type { AthenaChat } from "./useAthenaChat";
 
@@ -21,10 +23,9 @@ const bubble = {
   transition: { duration: 0.3, ease: EASE },
 };
 
-function AthenaAvatar() {
-  return (
-    <img src={athenaMark} alt="" className="chat-avatar" aria-hidden />
-  );
+// Athena's portrait; it glows and ripples while she is speaking
+function AthenaAvatar({ speaking = false }: { speaking?: boolean }) {
+  return <img src={athenaMark} alt="" className={`chat-avatar ${speaking ? "is-speaking" : ""}`} aria-hidden />;
 }
 
 // The conversation itself lives in App (see useAthenaChat), so it isn't lost when you switch pages
@@ -34,6 +35,21 @@ export default function AthenaPage({ chat }: { chat: AthenaChat }) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const empty = messages.length === 0;
+  const voice = useAthenaVoice();
+  const { t } = useLang();
+
+  // She speaks each NEW answer aloud (answers already in the chat when you open the page stay silent)
+  const seen = useRef(messages.length);
+  useEffect(() => {
+    if (messages.length <= seen.current) {
+      seen.current = messages.length;
+      return;
+    }
+    seen.current = messages.length;
+    const last = messages[messages.length - 1];
+    if (voice.autoSpeak && last.role === "athena" && !last.isError) voice.speak(last.text);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages]);
 
   // Scroll to the newest message whenever the conversation changes
   useEffect(() => {
@@ -70,15 +86,31 @@ export default function AthenaPage({ chat }: { chat: AthenaChat }) {
         <div className="chat-title">
           <AthenaAvatar />
           <span>Athena</span>
-          <span className="chat-subtitle">answers from your own spending</span>
+          <span className="chat-subtitle">{t("askSubtitle")}</span>
         </div>
-        {!empty && (
-          <button className="chat-new" onClick={newChat} disabled={thinking}>
-            <PlusIcon size={16} />
-            New chat
+        <div className="chat-top-actions">
+          <button
+            className={`chat-new ${voice.autoSpeak ? "is-on" : ""}`}
+            onClick={() => {
+              if (voice.autoSpeak) voice.stop();
+              voice.setAutoSpeak(!voice.autoSpeak);
+            }}
+            title="Athena speaks her answers aloud"
+            aria-pressed={voice.autoSpeak}
+          >
+            <SpeakerIcon size={16} muted={!voice.autoSpeak} />
+            Voice {voice.autoSpeak ? "on" : "off"}
           </button>
-        )}
+          {!empty && (
+            <button className="chat-new" onClick={newChat} disabled={thinking}>
+              <PlusIcon size={16} />
+              New chat
+            </button>
+          )}
+        </div>
       </header>
+
+      {voice.error && <p className="chat-voice-error">{voice.error}</p>}
 
       {empty ? (
         /* ---------- Empty chat: greeting + suggestions ---------- */
@@ -89,8 +121,8 @@ export default function AthenaPage({ chat }: { chat: AthenaChat }) {
           transition={{ duration: 0.5, ease: EASE }}
         >
           <img src={athenaMark} alt="" className="chat-welcome-mark" />
-          <h1>What would you like to know?</h1>
-          <p className="muted">Ask about your spending in plain English. Athena looks it up in your receipts.</p>
+          <h1>{t("askTitle")}</h1>
+          <p className="muted">{t("askSub")}</p>
           <div className="chat-suggestions">
             {SUGGESTIONS.map((s, i) => (
               <motion.button
@@ -116,9 +148,22 @@ export default function AthenaPage({ chat }: { chat: AthenaChat }) {
               </motion.div>
             ) : (
               <motion.div key={i} className={`msg msg-athena ${m.isError ? "msg-error" : ""}`} {...bubble}>
-                <AthenaAvatar />
+                <AthenaAvatar speaking={voice.speaking === m.text} />
                 <div className="msg-body">
-                  <span className="msg-name">Athena</span>
+                  <span className="msg-name">
+                    Athena
+                    {!m.isError && (
+                      <button
+                        className="msg-hear"
+                        onClick={() => (voice.speaking === m.text ? voice.stop() : voice.speak(m.text))}
+                        aria-label={voice.speaking === m.text ? "Stop" : "Hear Athena"}
+                        title={voice.speaking === m.text ? "Stop" : "Hear Athena"}
+                      >
+                        <SpeakerIcon size={14} />
+                        {voice.speaking === m.text ? "Stop" : "Hear"}
+                      </button>
+                    )}
+                  </span>
                   <p>{m.text}</p>
                 </div>
               </motion.div>
@@ -157,15 +202,27 @@ export default function AthenaPage({ chat }: { chat: AthenaChat }) {
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask Athena about your spending…"
+            placeholder={t("askPlaceholder")}
             maxLength={500}
             aria-label="Your question"
           />
+          {voice.supportsMic && (
+            <button
+              className={`composer-mic ${voice.listening ? "is-listening" : ""}`}
+              type="button"
+              onClick={() => voice.listen((text) => send(text))}
+              aria-label={voice.listening ? "Stop listening" : "Speak your question"}
+              title={voice.listening ? "Listening… click to stop" : "Speak your question"}
+              disabled={thinking}
+            >
+              <MicIcon size={18} />
+            </button>
+          )}
           <button className="composer-send" type="submit" disabled={thinking || !question.trim()} aria-label="Send">
             <SendIcon size={18} />
           </button>
         </div>
-        <p className="composer-note">Athena can make mistakes. Double-check important numbers.</p>
+        <p className="composer-note">{t("askNote")}</p>
       </form>
     </div>
   );

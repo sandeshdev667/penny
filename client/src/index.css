@@ -797,3 +797,96 @@ h2 { font-size: 22px; letter-spacing: 0.005em; margin-bottom: 14px; }
   .statement-row > span:nth-child(4) { grid-column: 2; }
   .statement-row .statement-amount { grid-column: 3; grid-row: 1; }
 }
+
+/* ---------- Athena's voice ---------- */
+.chat-top-actions { display: flex; gap: 8px; }
+.chat-new.is-on { border-color: var(--bronze-light); background: var(--gold-wash); }
+.chat-avatar { transition: filter 0.3s; border-radius: 50%; }
+.chat-avatar.is-speaking { animation: speak-ring 1.4s ease-out infinite; filter: drop-shadow(0 0 6px rgba(201, 169, 106, 0.8)); }
+@keyframes speak-ring {
+  0% { box-shadow: 0 0 0 0 rgba(201, 169, 106, 0.55); }
+  100% { box-shadow: 0 0 0 12px rgba(201, 169, 106, 0); }
+}
+.msg-hear {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 10px;
+  padding: 1px 7px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: none;
+  font: 500 12px var(--body);
+  color: var(--muted);
+  cursor: pointer;
+  vertical-align: 1px;
+  transition: color 0.2s, border-color 0.2s;
+}
+.msg-hear:hover { color: var(--bronze); border-color: var(--bronze-light); }
+.composer-mic {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+}
+.composer-mic:hover { color: var(--bronze); background: var(--gold-wash); }
+.composer-mic:disabled { opacity: 0.4; cursor: not-allowed; }
+.composer-mic.is-listening { color: #fff; background: #b5562f; animation: listening 1.2s ease-in-out infinite; }
+@keyframes listening {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(181, 86, 47, 0.5); }
+  50% { box-shadow: 0 0 0 8px rgba(181, 86, 47, 0); }
+}
+@media (prefers-reduced-motion: reduce) { .chat-avatar.is-speaking, .composer-mic.is-listening { animation: none; } }
+
+/* ---------- The Voyage map ---------- */
+.voyage-stage { border-radius: 4px; overflow: hidden; box-shadow: 0 14px 30px -22px rgba(13, 26, 43, 0.8); }
+.voyage-svg { display: block; width: 100%; height: auto; }
+.island { cursor: pointer; outline: none; }
+.voyage-moon { fill: #f1e3bd; font-family: var(--display); font-style: italic; font-size: 18px; pointer-events: none; }
+.voyage-stop { fill: rgba(233, 213, 170, 0.7); font-family: var(--body); font-size: 11.5px; letter-spacing: 0.04em; pointer-events: none; }
+.amphorae { display: flex; justify-content: space-between; gap: 6px; max-width: 520px; margin: 4px 0 2px; }
+.amphora { display: block; width: 100%; height: auto; }
+.amphorae > div { flex: 1; max-width: 44px; }
+.island:focus-visible path { stroke: #f6eedb; stroke-width: 3; }
+.voyage-info { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; margin: 14px 0 4px; }
+.voyage-info strong { font-family: var(--display); font-size: 20px; }
+.voyage-info span { color: var(--muted); }
+.voyage-info b.is-over { color: #a8452a; }
+.voyage-info b.is-under { color: #4c7a3d; }
+.voyage-provisions { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+.provisions-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.provisions-label { font-size: 12px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.provisions-amount { font-family: var(--display); font-size: 22px; font-weight: 600; }
+.provisions-amount .link-button { margin-left: 10px; font-family: var(--body); font-size: 14px; }
+.provisions-edit { display: flex; align-items: center; gap: 8px; font-size: 18px; }
+.provisions-edit input { width: 110px; padding: 5px 8px; border: 1px solid var(--bronze-light); border-radius: 3px; font: inherit; background: white; }
+.provisions-fill { height: 100%; border-radius: 5px; background: linear-gradient(90deg, #6f8a52, #b9a24a); }
+.provisions-fill.is-low { background: linear-gradient(90deg, #b9a24a, #c98a2c); }
+.provisions-fill.is-over { background: linear-gradient(90deg, #c98a2c, #a8452a); }
+.provisions-day { position: absolute; top: -4px; width: 2px; height: 18px; margin-left: -1px; background: var(--navy); }
+.voyage-forecast { margin: 12px 0 0; font-size: 15.5px; line-height: 1.5; }
+.voyage-forecast.is-storm { color: #8a2d12; }
+.voyage-forecast.is-fair { color: #3f6a35; }
+
+.chat-voice-error { margin: 10px 0 0; padding: 8px 12px; border-radius: 3px; background: #f8e3da; color: #8a2d12; font-size: 14px; }
+
+/* ---------- Language switch (old times / newer) ---------- */
+.lang-switch { display: flex; padding: 3px; margin-bottom: 14px; border: 1px solid rgba(201, 169, 106, 0.3); border-radius: 999px; background: rgba(0, 0, 0, 0.25); }
+.lang-switch button { flex: 1; padding: 6px 4px; border: none; border-radius: 999px; background: none; font: 600 12.5px var(--body); color: rgba(239, 228, 204, 0.6); cursor: pointer; transition: background 0.3s, color 0.3s; white-space: nowrap; }
+.lang-switch button:hover { color: #f6eedb; }
+.lang-switch button.is-on { background: var(--bronze-light); color: #0d1a2b; }
+.lang-switch button:focus-visible { outline: 2px solid var(--bronze-light); outline-offset: 2px; }
+.sidebar.collapsed .lang-switch { display: none; }
+@media (max-width: 800px) {
+  /* on phones the sidebar is a top bar: keep only the language switch from the footer */
+  .sidebar-foot { display: block; margin: 0; padding: 0; width: 100%; }
+  .sidebar-quote { display: none; }
+  .lang-switch { margin: 4px 0 0; max-width: 220px; }
+}

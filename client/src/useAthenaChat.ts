@@ -23,7 +23,8 @@ function loadSaved(): AthenaMessage[] {
   }
 }
 
-export function useAthenaChat() {
+// tone: how Athena speaks ("ancient" = the age of Odysseus, "modern" = plain English)
+export function useAthenaChat(tone: "ancient" | "modern" = "ancient") {
   const [messages, setMessages] = useState<AthenaMessage[]>(loadSaved);
   const [thinking, setThinking] = useState(false);
 
@@ -52,7 +53,7 @@ export function useAthenaChat() {
       const res = await fetch("/api/athena", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: text, history }),
+        body: JSON.stringify({ question: text, history, tone }),
         signal: AbortSignal.timeout(60000),
       });
       const data = await res.json();

@@ -6,6 +6,7 @@ import { EASE } from "./anim";
 import { CheckIcon, WarnIcon } from "./icons";
 import { CATEGORIES, type Category, type ParsedReceipt } from "./receiptTypes";
 import { money } from "./format";
+import { useLang } from "./lang";
 
 // While editing, amounts are kept as text so you can type freely (e.g. "4." on the way to "4.50")
 type EditableItem = { name: string; category: Category; amount: string };
@@ -28,6 +29,7 @@ type Props = {
 };
 
 export default function ReceiptReview({ receipt, problems, saving, onSave, onCancel }: Props) {
+  const { t, cat } = useLang();
   // Start the form with Gemini's answer (and sensible defaults for anything missing)
   const [merchant, setMerchant] = useState(receipt.merchant ?? "");
   const [date, setDate] = useState(receipt.date ?? today());
@@ -80,7 +82,7 @@ export default function ReceiptReview({ receipt, problems, saving, onSave, onCan
     >
       {problems.length > 0 && (
         <div className="alert alert-warning">
-          <strong>Gemini wasn't sure about:</strong>
+          <strong>{t("unsure")}</strong>
           <ul>
             {problems.map((p) => (
               <li key={p}>{p}</li>
@@ -128,7 +130,7 @@ export default function ReceiptReview({ receipt, problems, saving, onSave, onCan
             >
               {CATEGORIES.map((c) => (
                 <option key={c} value={c}>
-                  {c}
+                  {cat(c)}
                 </option>
               ))}
             </select>
@@ -182,7 +184,7 @@ export default function ReceiptReview({ receipt, problems, saving, onSave, onCan
           Cancel
         </button>
         <button className="button" onClick={handleSave} disabled={saving || blockers.length > 0}>
-          {saving ? "Saving…" : `Save ${money(itemsPlusTax)}`}
+          {saving ? t("saving") : t("sealAmount", { a: money(itemsPlusTax) })}
         </button>
       </div>
     </motion.div>

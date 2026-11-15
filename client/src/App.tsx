@@ -5,6 +5,7 @@ import Dashboard from "./Dashboard";
 import ScanPage from "./ScanPage";
 import AthenaPage from "./AthenaPage";
 import { useAthenaChat } from "./useAthenaChat";
+import { useLang, type WordKey } from "./lang";
 import AxesLine from "./AxesLine";
 import { EASE } from "./anim";
 import { CameoIcon, ShipIcon, TempleIcon } from "./icons";
@@ -12,10 +13,10 @@ import pennyMark from "./assets/penny-mark.svg";
 
 // The pages in the sidebar (eyebrow = the small line above each page title)
 type Page = "dashboard" | "scan" | "athena";
-const PAGES: { id: Page; label: string; Icon: typeof TempleIcon; eyebrow: string; title: string }[] = [
-  { id: "dashboard", label: "Dashboard", Icon: TempleIcon, eyebrow: "The ledger", title: "Where the money sailed" },
-  { id: "scan", label: "Scan Receipt", Icon: ShipIcon, eyebrow: "Bring it home", title: "Scan a receipt" },
-  { id: "athena", label: "Ask Athena", Icon: CameoIcon, eyebrow: "Counsel", title: "Ask Athena" },
+const PAGES: { id: Page; label: WordKey; Icon: typeof TempleIcon; eyebrow: WordKey; title: WordKey }[] = [
+  { id: "dashboard", label: "navDashboard", Icon: TempleIcon, eyebrow: "dashEyebrow", title: "dashTitle" },
+  { id: "scan", label: "navScan", Icon: ShipIcon, eyebrow: "scanEyebrow", title: "scanTitle" },
+  { id: "athena", label: "navAthena", Icon: CameoIcon, eyebrow: "navAthena", title: "navAthena" },
 ];
 
 // Remember (for this browser tab) that the user already went past the landing page,
@@ -51,7 +52,8 @@ export default function App() {
   const [page, setPage] = useState<Page>("dashboard"); // which page is showing right now
   const current = PAGES.find((p) => p.id === page)!;
   // the Ask Athena conversation lives here, so it survives switching pages
-  const athenaChat = useAthenaChat();
+  const { t, ancient, setAncient } = useLang();
+  const athenaChat = useAthenaChat(ancient ? "ancient" : "modern");
   const [collapsed, setCollapsed] = useState(loadCollapsed); // sidebar shows icons only
 
   function toggleSidebar() {
@@ -100,7 +102,7 @@ export default function App() {
                 <img src={pennyMark} alt="" className="brand-logo" />
                 <span className="brand-text">
                   <span className="brand-name">Penny</span>
-                  <span className="brand-sub">Ledger of the voyage</span>
+                  <span className="brand-sub">{t("brandSub")}</span>
                 </span>
               </button>
               {/* the round button on the sidebar's edge: collapse to icons / expand again */}
@@ -120,7 +122,7 @@ export default function App() {
                     key={p.id}
                     className={`nav-link ${page === p.id ? "active" : ""}`}
                     onClick={() => setPage(p.id)}
-                    title={collapsed ? p.label : undefined}
+                    title={collapsed ? t(p.label) : undefined}
                   >
                     {/* the highlight slides between buttons (layoutId makes it one moving element) */}
                     {page === p.id && (
@@ -131,11 +133,20 @@ export default function App() {
                       />
                     )}
                     <p.Icon className="nav-icon" />
-                    <span className="nav-label">{p.label}</span>
+                    <span className="nav-label">{t(p.label)}</span>
                   </button>
                 ))}
               </nav>
               <div className="sidebar-foot">
+                {/* switch the whole app between the language of Odysseus's age and plain modern English */}
+                <div className="lang-switch" role="group" aria-label="Language">
+                  <button className={ancient ? "is-on" : ""} onClick={() => setAncient(true)} aria-pressed={ancient}>
+                    {t("langOld")}
+                  </button>
+                  <button className={!ancient ? "is-on" : ""} onClick={() => setAncient(false)} aria-pressed={!ancient}>
+                    {t("langNew")}
+                  </button>
+                </div>
                 <p className="sidebar-quote">Every penny finds its way home.</p>
               </div>
             </aside>
@@ -153,8 +164,8 @@ export default function App() {
                   {/* the chat page has its own slim header, like a normal chat app */}
                   {page !== "athena" && (
                     <header className="page-head">
-                      <span className="eyebrow">{current.eyebrow}</span>
-                      <h1>{current.title}</h1>
+                      <span className="eyebrow">{t(current.eyebrow)}</span>
+                      <h1>{t(current.title)}</h1>
                       <AxesLine className="page-axes" delay={0.2} duration={1.1} />
                     </header>
                   )}

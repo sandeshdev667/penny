@@ -5,6 +5,7 @@ import { useState } from "react";
 import { motion } from "motion/react";
 import { EASE } from "./anim";
 import { money } from "./format";
+import { useLang } from "./lang";
 import { CheckIcon, ShipIcon } from "./icons";
 import scrollInk from "./assets/scroll-ink.svg";
 import { CATEGORIES, type Category } from "./receiptTypes";
@@ -52,6 +53,7 @@ type Props = {
 };
 
 export default function StatementImport({ onStatusChange, onImported, onViewDashboard }: Props) {
+  const { t, cat } = useLang();
   const [status, setStatusRaw] = useState<Status>("idle");
   const [fileName, setFileName] = useState("");
   const [bank, setBank] = useState<string | null>(null);
@@ -172,9 +174,9 @@ export default function StatementImport({ onStatusChange, onImported, onViewDash
           animate={{ y: [0, -5, 0], rotate: [1, -1, 1] }}
           transition={{ duration: 5.5, repeat: Infinity, ease: "easeInOut" }}
         />
-        <span className="dropzone-title">Import a bank statement</span>
-        <span className="dropzone-hint">Gemini reads every transaction from a PDF, from any bank or card.</span>
-        <span className="button">Choose statement PDF</span>
+        <span className="dropzone-title">{t("stmtTitle")}</span>
+        <span className="dropzone-hint">{t("stmtHint")}</span>
+        <span className="button">{t("stmtBtn")}</span>
         {status === "error" && <span className="alert alert-error dropzone-error">{error}</span>}
         <input
           type="file"
@@ -201,7 +203,7 @@ export default function StatementImport({ onStatusChange, onImported, onViewDash
           >
             <ShipIcon size={52} />
           </motion.span>
-          <span>Reading every line of {fileName}…</span>
+          <span>{t("stmtReading", { a: fileName })}</span>
           <span className="statement-hint">Long statements can take up to a minute.</span>
         </div>
       </motion.div>
@@ -220,14 +222,14 @@ export default function StatementImport({ onStatusChange, onImported, onViewDash
           >
             <CheckIcon size={22} />
           </motion.span>
-          <h2>Statement imported</h2>
+          <h2>{t("stmtDone")}</h2>
         </div>
         <p className="saved-total">
           {result.count} {result.count === 1 ? "transaction" : "transactions"} · {signedMoney(result.total)}
         </p>
         <div className="review-actions">
           <button className="button button-secondary" onClick={onViewDashboard}>
-            View dashboard
+            {t("toDash")}
           </button>
           <button className="button" onClick={reset}>
             Done
@@ -315,7 +317,7 @@ export default function StatementImport({ onStatusChange, onImported, onViewDash
                 >
                   {CATEGORIES.map((c) => (
                     <option key={c} value={c}>
-                      {c}
+                      {cat(c)}
                     </option>
                   ))}
                 </select>
@@ -339,7 +341,7 @@ export default function StatementImport({ onStatusChange, onImported, onViewDash
             Cancel
           </button>
           <button className="button" onClick={importRows} disabled={saving || selected.length === 0 || missingName}>
-            {saving ? "Importing…" : `Import ${selected.length} ${selected.length === 1 ? "transaction" : "transactions"}`}
+            {saving ? t("stmtImporting") : t("stmtImport", { a: selected.length, b: t(selected.length === 1 ? "entry" : "entries") })}
           </button>
         </div>
       </div>
